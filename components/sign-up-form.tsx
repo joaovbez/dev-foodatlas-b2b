@@ -4,16 +4,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 
-export function LoginForm({
+export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
   return (
     <form className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold text-gray-700">Seja bem vindo de volta!</h1>
+        <h1 className="text-2xl font-bold text-gray-700">Integre os dados do seu restaurante com Inteligência Artificial!</h1>
         <p className="text-balance text-sm text-muted-foreground">
-          Faça login em sua conta.
+          Crie uma conta em nossa plataforma.
         </p>
         <hr className="w-full border-t border-gray-300" />
       </div>
@@ -22,26 +22,22 @@ export function LoginForm({
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" placeholder="m@example.com" required />
         </div>
-        <div className="grid gap-2">
-          <div className="flex items-center">
-            <Label htmlFor="password">Senha</Label>
-            <a
-              href="/forgot-password"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
-              Esqueceu sua senha?
-            </a>
-          </div>
-          <Input id="password" type="password" required />
+        <div className="grid gap-2">        
+            <Label htmlFor="password">Senha</Label>          
+            <Input id="password" type="password" required />
+        </div>
+        <div className="grid gap-2">        
+            <Label htmlFor="password">Confirme sua Senha</Label>          
+            <Input id="password" type="password" required />
         </div>
         <Button type="submit" className="w-full" asChild>
-          <Link href="/dashboard">Login</Link>
+          <Link href="/dashboard">Criar conta</Link>
         </Button>        
       </div>
       <div className="text-center text-sm">
-        Não possui uma conta?{" "}
-        <a href="/sign-up" className="underline underline-offset-4">
-          Registre-se!
+        Já Possui uma conta?{" "}
+        <a href="/login" className="underline underline-offset-4">
+          Faça login!
         </a>
       </div>
     </form>

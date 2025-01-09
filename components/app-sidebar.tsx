@@ -12,6 +12,16 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  Brain,
+  ChartSpline,
+  Package,
+  Utensils,
+  Building,
+  CircleDollarSign,
+  Star,
+  Settings,
+  HelpingHand,
+  HelpCircle,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -29,71 +39,67 @@ import {
 // This is sample data.
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "João Victor",
+    email: "joaovictor@gmail.com",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
     {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
+      name: "Restaurante 1",
+      logo: Utensils,
+      plan: "Comida Italiana",
     },
     {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
+      name: "Restaurante 2",
+      logo: Utensils,
+      plan: "Comida Mexicana",
     },
     {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
+      name: "Restaurante 3",
+      logo: Utensils,
+      plan: "Comida Japonesa",
     },
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "Inteligência Artificial",
       url: "#",
-      icon: SquareTerminal,
-      isActive: true,
+      icon: Brain, 
+      isActive: true,     
       items: [
         {
-          title: "History",
+          title: "Chat",
           url: "#",
         },
         {
-          title: "Starred",
+          title: "Insights Salvos",
+          url: "#",
+        },        
+      ],
+    },
+    {
+      title: "DashBoard",
+      url: "#",
+      icon: ChartSpline,
+      items: [
+        {
+          title: "Opção 1",
           url: "#",
         },
         {
-          title: "Settings",
+          title: "Opção 2",
+          url: "#",
+        },
+        {
+          title: "Opção 3",
           url: "#",
         },
       ],
     },
     {
-      title: "Models",
+      title: "Delivery",
       url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
+      icon: Package,
       items: [
         {
           title: "Introduction",
@@ -114,9 +120,55 @@ const data = {
       ],
     },
     {
-      title: "Settings",
+      title: "Loja Física",
       url: "#",
-      icon: Settings2,
+      icon: Building,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+        {
+          title: "Team",
+          url: "#",
+        },
+        {
+          title: "Billing",
+          url: "#",
+        },
+        {
+          title: "Limits",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Financeiro",
+      url: "#",
+      icon: CircleDollarSign,
+      items: [
+        {
+          title: "General",
+          url: "#",
+        },
+        {
+          title: "Team",
+          url: "#",
+        },
+        {
+          title: "Billing",
+          url: "#",
+        },
+        {
+          title: "Limits",
+          url: "#",
+        },
+      ],
+    },
+    {
+      title: "Avaliações",
+      url: "#",
+      icon: Star,
       items: [
         {
           title: "General",
@@ -139,19 +191,19 @@ const data = {
   ],
   projects: [
     {
-      name: "Design Engineering",
+      name: "Integrações",
       url: "#",
       icon: Frame,
+    },    
+    {
+      name: "Configurações",
+      url: "#",
+      icon: Settings,
     },
     {
-      name: "Sales & Marketing",
+      name: "Ajuda",
       url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
+      icon: HelpCircle,
     },
   ],
 }
