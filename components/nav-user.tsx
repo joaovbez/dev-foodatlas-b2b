@@ -28,12 +28,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { useRef } from "react"
+
 import Link from "next/link"
 
-function ContaSection() {
-  return <div className="p-4 bg-green-100">Conteúdo da Seção A</div>
-}
 export function NavUser({
   user,
 }: {
