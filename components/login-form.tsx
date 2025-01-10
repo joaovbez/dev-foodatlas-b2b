@@ -2,6 +2,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+
 import Link from "next/link"
 
 export function LoginForm({
@@ -33,7 +35,12 @@ export function LoginForm({
             </a>
           </div>
           <Input id="password" type="password" required />
+          <div className="flex items-center space-x-2">
+            <Checkbox id="remember" />
+            <Label htmlFor="remember">Lembrar-me</Label>
+          </div>
         </div>
+
         <Button type="submit" className="w-full" asChild>
           <Link href="/dashboard">Login</Link>
         </Button>        

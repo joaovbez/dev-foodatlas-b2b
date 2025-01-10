@@ -6,7 +6,7 @@ import {
   Brain,
   ChartSpline,
   Package,
-  Utensils,
+  Store,
   Building,
   CircleDollarSign,
   Star,
@@ -36,17 +36,17 @@ const data = {
   teams: [
     {
       name: "Restaurante 1",
-      logo: Utensils,
+      logo: Store,
       plan: "Comida Italiana",
     },
     {
       name: "Restaurante 2",
-      logo: Utensils,
+      logo: Store,
       plan: "Comida Mexicana",
     },
     {
       name: "Restaurante 3",
-      logo: Utensils,
+      logo: Store,
       plan: "Comida Japonesa",
     },
   ],

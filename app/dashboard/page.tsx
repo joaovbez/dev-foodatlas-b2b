@@ -35,7 +35,14 @@ export default function Page() {
                   <BreadcrumbPage>Chat</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
-            </Breadcrumb>
+            </Breadcrumb>            
+          </div>
+          <div className="flex flex-1 justify-end p-4">
+            <img
+              src="/foodatlas_LOGOS_Prancheta 1.svg"
+              alt="Logo"
+              className="h-20 w-auto" 
+            />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

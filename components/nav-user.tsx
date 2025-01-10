@@ -28,7 +28,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useRef } from "react"
+import Link from "next/link"
 
+function ContaSection() {
+  return <div className="p-4 bg-green-100">Conteúdo da Seção A</div>
+}
 export function NavUser({
   user,
 }: {
@@ -51,7 +56,7 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">JV</AvatarFallback>
+                <AvatarFallback className="rounded-lg bg-green">JV</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user.name}</span>
@@ -70,7 +75,7 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">JV</AvatarFallback>
+                  <AvatarFallback className="rounded-lg bg-green">JV</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{user.name}</span>
@@ -97,9 +102,11 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem asChild>
+            <Link href={"/login"}>  
               <LogOut />
               Sair
+            </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
