@@ -2,16 +2,7 @@
 
 import * as React from "react"
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
   Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
   Brain,
   ChartSpline,
   Package,
@@ -19,8 +10,7 @@ import {
   Building,
   CircleDollarSign,
   Star,
-  Settings,
-  HelpingHand,
+  Settings, 
   HelpCircle,
 } from "lucide-react"
 
