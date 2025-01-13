@@ -1,5 +1,18 @@
 "use client"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
+
 import * as React from "react"
 import {
   ColumnDef,
@@ -38,33 +51,89 @@ import {
 
 export type Restaurant = {
   id: string
-  name: string
+  nome: string
   CNPJ: string
-  unit: string
-  adress: string
+  unidade: string
+  endereço: string
 }
 
 const data: Restaurant[] = [
   {
     id: "m5gr84i9",
-    name: "Restaurante 1",
+    nome: "Restaurante 1",
     CNPJ: "04.693.001/0001-10",
-    unit: "Osasco",
-    adress: "Rua Antônio Ivo, 678, Osasco, SP",
+    unidade: "Osasco",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
   },
   {
     id: "3u1reuv4",
-    name: "Restaurante 2",
+    nome: "Restaurante 2",
     CNPJ: "04.693.001/0001-10",
-    unit: "Shopping JK",
-    adress: "Rua Antônio Ivo, 678, Osasco, SP",
+    unidade: "Shopping JK",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
   },
   {
     id: "derv1ws0",
-    name: "Restaurante 3",
+    nome: "Restaurante 3",
     CNPJ: "83.131.001/0001-10",
-    unit: "Villa Ema",
-    adress: "Rua Antônio Ivo, 678, Osasco, SP",
+    unidade: "Villa Ema",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+  },
+  {
+    id: "3u1reuv4",
+    nome: "Restaurante 2",
+    CNPJ: "04.693.001/0001-10",
+    unidade: "Shopping JK",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+  },
+  {
+    id: "derv1ws0",
+    nome: "Restaurante 3",
+    CNPJ: "83.131.001/0001-10",
+    unidade: "Villa Ema",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+  },
+  {
+    id: "3u1reuv4",
+    nome: "Restaurante 2",
+    CNPJ: "04.693.001/0001-10",
+    unidade: "Shopping JK",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+  },
+  {
+    id: "derv1ws0",
+    nome: "Restaurante 3",
+    CNPJ: "83.131.001/0001-10",
+    unidade: "Villa Ema",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+  },
+  {
+    id: "3u1reuv4",
+    nome: "Restaurante 2",
+    CNPJ: "04.693.001/0001-10",
+    unidade: "Shopping JK",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+  },
+  {
+    id: "derv1ws0",
+    nome: "Restaurante 3",
+    CNPJ: "83.131.001/0001-10",
+    unidade: "Villa Ema",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+  },
+  {
+    id: "3u1reuv4",
+    nome: "Restaurante 2",
+    CNPJ: "04.693.001/0001-10",
+    unidade: "Shopping JK",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+  },
+  {
+    id: "derv1ws0",
+    nome: "Restaurante 3",
+    CNPJ: "83.131.001/0001-10",
+    unidade: "Villa Ema",
+    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
   },
 ]
 
@@ -92,21 +161,21 @@ export const columns: ColumnDef<Restaurant>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "name",
+    accessorKey: "nome",
     header: "Nome",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("name")}</div>
+      <div className="capitalize">{row.getValue("nome")}</div>
     ),
   },
   {
-    accessorKey: "unit",
+    accessorKey: "unidade",
     header: "Unidade",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("unit")}</div>
+      <div className="capitalize">{row.getValue("unidade")}</div>
     ),
   },
   {
-    accessorKey: "adress",
+    accessorKey: "endereço",
     header: ({ column }) => {
       return (
         <Button
@@ -118,7 +187,7 @@ export const columns: ColumnDef<Restaurant>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => <div>{row.getValue("adress")}</div>,
+    cell: ({ row }) => <div>{row.getValue("endereço")}</div>,
   },
   {
     accessorKey: "CNPJ",
@@ -130,9 +199,7 @@ export const columns: ColumnDef<Restaurant>[] = [
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => {
-      const payment = row.original
-
+    cell: ({ row }) => {    
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -141,16 +208,25 @@ export const columns: ColumnDef<Restaurant>[] = [
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+          <DropdownMenuContent align="end">                        
+            <DropdownMenuItem>Editar</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <AlertDialog>
+                <AlertDialogTrigger className="text-red relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0">Remover</AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Tem certeza que deseja remover este restaurante?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Ao removê-lo, você perderá todos os dados relacionados ao mesmo e deverá configurar novamente suas integrações com o FoodAtlas.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction className="bg-red text-bold">Sim, quero remover.</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>  
+            </DropdownMenuItem>         
           </DropdownMenuContent>
         </DropdownMenu>
       )
@@ -190,17 +266,17 @@ export function DataTable() {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter adresss..."
-          value={(table.getColumn("adress")?.getFilterValue() as string) ?? ""}
+          placeholder="Buscar pelo nome..."
+          value={(table.getColumn("nome")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("adress")?.setFilterValue(event.target.value)
-          }
+            table.getColumn("nome")?.setFilterValue(event.target.value)
+          } 
           className="max-w-sm"
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
+              Informações <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

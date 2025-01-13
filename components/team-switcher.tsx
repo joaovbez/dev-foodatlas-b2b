@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { ChevronsUpDown, Plus } from "lucide-react"
+import Link from "next/link"
 
 import {
   DropdownMenu,
@@ -79,7 +80,7 @@ export function TeamSwitcher({
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
               </div>
-              <div className="font-medium text-muted-foreground">Add team</div>
+              <Link href="/conta/restaurants/add-restaurants"> Adicionar Restaurante </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
