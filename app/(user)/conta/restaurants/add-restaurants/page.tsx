@@ -53,7 +53,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 
-const [completedSteps, setCompletedSteps] = [1, 4]
+const [completedSteps] = [1, 4]
 const totalSteps = 4
 const progress = (completedSteps / totalSteps) * 100
 
