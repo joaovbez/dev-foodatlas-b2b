@@ -1,5 +1,31 @@
 import * as React from "react"
  
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
+async function handleSubmit(formData: FormData) {
+  'use server'
+  // Aqui você pode adicionar a lógica para processar os dados do formulário
+  const nome = formData.get('nome')
+  const unidade = formData.get('unidade')
+  const endereco = formData.get('endereco')
+  const cnpj = formData.get('cnpj')
+  console.log('Dados do restaurante:', { nome, unidade, endereco, cnpj })
+  // Implementar lógica de redirecionamento ou processamento adicional
+}
+
+import {  
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card"
+
+import { AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Progress } from "@/components/ui/progress"
+
 import { cn } from "@/lib/utils"
 import {
   NavigationMenu,
@@ -11,18 +37,25 @@ import {
 } from "@/components/ui/navigation-menu"
  
 import { AppSidebar } from "@/components/app-sidebar"
+
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,  
 } from "@/components/ui/breadcrumb"
+
 import { Separator } from "@/components/ui/separator"
+
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+
+const [completedSteps, setCompletedSteps] = [1, 4]
+const totalSteps = 4
+const progress = (completedSteps / totalSteps) * 100
 
 const ListItem = React.forwardRef<
   React.ElementRef<"a">,
@@ -127,13 +160,122 @@ export default function Page() {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-2">            
-            <div className="h-44 w-24 rounded-xl bg-muted/50">
-              Adicionar Restaurante
+          <div className="h-80 grid auto-rows-min gap-4 grid-cols-1 md:grid-cols-[2fr_1fr]">            
+            <div className="rounded-lg bg-muted/50">
+            <Card className="w-full bg-gray">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center text-gray2">1. Dados do Restaurante</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form action={handleSubmit} method="POST" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nome" className="text-gray2">Nome do Restaurante</Label>
+                    <Input
+                      id="nome"
+                      name="nome"
+                      required
+                      className={cn("text-black", "placeholder:text-gray2/80")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="unidade" className="text-gray2">Unidade</Label>
+                    <Input
+                      id="unidade"
+                      name="unidade"
+                      required
+                      className={cn("text-black", "placeholder:text-gray2/50")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="endereco" className="text-gray2">Endereço</Label>
+                    <Input
+                      id="endereco"
+                      name="endereco"
+                      required
+                      className={cn("text-black", "placeholder:text-gray2/50")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cnpj" className="text-gray2">CNPJ</Label>
+                    <Input
+                      id="cnpj"
+                      name="cnpj"
+                      required
+                      className={cn("text-black", "placeholder:text-gray2/50")}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-[#C9E543] text-black hover:bg-[#B8D32F]">
+                    Ir para comprovação de propriedade
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
             </div>
-            <div className="h-full w-1/3 rounded-xl bg-muted/50"> 
-              Check-List
-            </div>
+            <Card className="w-full max-w-md bg-[#F6F6F6] p-6 shadow-sm">
+              <CardHeader className="px-0 pt-0">
+                <CardTitle className="text-xl font-medium text-gray-700">Checklist</CardTitle>
+              </CardHeader>
+              <CardContent className="px-0 pb-0">
+                <div className="space-y-6">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-medium text-gray-700">1. Registrar restaurantes e unidades</h3>
+                      <span className="text-green-600 text-sm">Completo</span>
+                    </div>
+                    <p className="text-[#7D7E80] text-sm">
+                      Adicione aqui os principais dados (nome, local, CNPJ, etc.) das suas unidades
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-medium text-gray-700">2. Comprovar propriedade dos restaurantes</h3>
+                      <span className="text-amber-600 text-sm">Pendente</span>
+                    </div>
+                    <p className="text-[#7D7E80] text-sm">
+                      Faça upload dos documentos de propriedade para ter acesso à nossa solução.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-medium text-gray-700">3. Integrar com paginas de avaliações</h3>
+                      <span className="text-amber-600 text-sm">Pendente</span>
+                    </div>
+                    <p className="text-[#7D7E80] text-sm">
+                      Realize a integração com as principais plataformas de avaliações como Google, TripAdvisor, etc.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-medium text-gray-700">4. Integrar com sistemas e softwares</h3>
+                      <span className="text-amber-600 text-sm">Pendente</span>
+                    </div>
+                    <p className="text-[#7D7E80] text-sm">
+                      Realize a integração com os principais sistemas e softwares de gestão de restaurantes, como ERP, PDV, Delivery, etc. 
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 pt-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Progresso</span>
+                      <span className="text-gray-600">{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                  </div>
+
+                  {completedSteps < totalSteps && (
+                    <Alert variant="default" className="mt-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Você ainda tem {totalSteps - completedSteps} etapas pendentes para completar.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </CardContent>
+            </Card>          
           </div>          
         </div>                       
       </SidebarInset>
