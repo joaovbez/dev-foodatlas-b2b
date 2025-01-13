@@ -42,7 +42,7 @@ export function LoginForm({
         </div>
 
         <Button type="submit" className="w-full" asChild>
-          <Link href="/dashboard">Login</Link>
+          <Link href="/chat">Login</Link>
         </Button>        
       </div>
       <div className="text-center text-sm">

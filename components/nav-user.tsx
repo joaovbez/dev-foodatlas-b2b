@@ -91,7 +91,7 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <BadgeCheck />
-                Conta
+                <Link href="/conta"> Conta </Link>
               </DropdownMenuItem>              
               <DropdownMenuItem>
                 <Bell />

@@ -31,7 +31,7 @@ export function SignUpForm({
             <Input id="password" type="password" required />
         </div>
         <Button type="submit" className="w-full" asChild>
-          <Link href="/dashboard">Criar conta</Link>
+          <Link href="/chat">Criar conta</Link>
         </Button>        
       </div>
       <div className="text-center text-sm">
