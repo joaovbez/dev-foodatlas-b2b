@@ -35,8 +35,6 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -199,7 +197,7 @@ export const columns: ColumnDef<Restaurant>[] = [
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => {    
+    cell: ({}) => {    
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
