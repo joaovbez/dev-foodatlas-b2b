@@ -22,10 +22,6 @@ import {
   CardTitle 
 } from "@/components/ui/card"
 
-import { AlertCircle } from 'lucide-react'
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
-
 import { cn } from "@/lib/utils"
 import {
   NavigationMenu,
@@ -52,10 +48,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-
-const [completedSteps] = [1, 4]
-const totalSteps = 4
-const progress = (completedSteps / totalSteps) * 100
 
 const ListItem = React.forwardRef<
   React.ElementRef<"a">,
