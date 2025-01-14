@@ -114,7 +114,7 @@ export default function Page() {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-black/5 border-2 border-black/20">Gerir Restaurantes</NavigationMenuTrigger>
+                  <NavigationMenuTrigger className="bg-black/5 border-2 border-black/20" >Gerir Restaurantes</NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="bg-green/70 grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
                       <li className="row-span-3">
@@ -160,16 +160,16 @@ export default function Page() {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="h-80 grid auto-rows-min gap-4 grid-cols-1 md:grid-cols-[2fr_1fr]">            
+          <div className="h-80 grid auto-rows-min gap-4 grid-cols-1">            
             <div className="rounded-lg bg-muted/50">
             <Card className="w-full bg-gray">
               <CardHeader>
-                <CardTitle className="text-2xl font-bold text-center text-gray2">1. Dados do Restaurante</CardTitle>
+                <CardTitle className="text-2xl font-bold text-center text-gray2">Novo Usuário</CardTitle>
               </CardHeader>
               <CardContent>
                 <form action={handleSubmit} method="POST" className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="nome" className="text-gray2">Nome do Restaurante</Label>
+                    <Label htmlFor="nome" className="text-gray2">Nome Completo</Label>
                     <Input
                       id="nome"
                       name="nome"
@@ -178,7 +178,7 @@ export default function Page() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="unidade" className="text-gray2">Unidade</Label>
+                    <Label htmlFor="unidade" className="text-gray2">Email Corporativo (único)</Label>
                     <Input
                       id="unidade"
                       name="unidade"
@@ -187,7 +187,7 @@ export default function Page() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="endereco" className="text-gray2">Endereço</Label>
+                    <Label htmlFor="endereco" className="text-gray2">Cargo/Posição</Label>
                     <Input
                       id="endereco"
                       name="endereco"
@@ -196,7 +196,7 @@ export default function Page() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="cnpj" className="text-gray2">CNPJ</Label>
+                    <Label htmlFor="cnpj" className="text-gray2">Senha de Acesso</Label>
                     <Input
                       id="cnpj"
                       name="cnpj"
@@ -204,78 +204,13 @@ export default function Page() {
                       className={cn("text-black", "placeholder:text-gray2/50")}
                     />
                   </div>
-                  <Button type="submit" className="w-full border-2 border-black/20 bg-green/80 text-black hover:bg-green">
-                    Ir para comprovação de propriedade
+                  <Button type="submit" className="w-full border-2 border-black/20 bg-purple/90 text-black hover:bg-purple">
+                    Adicionar usuário
                   </Button>
                 </form>
               </CardContent>
             </Card>
-            </div>
-            <Card className="w-full max-w-md bg-[#F6F6F6] p-6 shadow-sm">
-              <CardHeader className="px-0 pt-0">
-                <CardTitle className="text-xl font-medium text-gray-700">Checklist</CardTitle>
-              </CardHeader>
-              <CardContent className="px-0 pb-0">
-                <div className="space-y-6">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-medium text-gray-700">1. Registrar restaurantes e unidades</h3>
-                      <span className="text-green-600 text-sm">Completo</span>
-                    </div>
-                    <p className="text-[#7D7E80] text-sm">
-                      Adicione aqui os principais dados (nome, local, CNPJ, etc.) das suas unidades
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-medium text-gray-700">2. Comprovar propriedade dos restaurantes</h3>
-                      <span className="text-amber-600 text-sm">Pendente</span>
-                    </div>
-                    <p className="text-[#7D7E80] text-sm">
-                      Faça upload dos documentos de propriedade para ter acesso à nossa solução.
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-medium text-gray-700">3. Integrar com paginas de avaliações</h3>
-                      <span className="text-amber-600 text-sm">Pendente</span>
-                    </div>
-                    <p className="text-[#7D7E80] text-sm">
-                      Realize a integração com as principais plataformas de avaliações como Google, TripAdvisor, etc.
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-medium text-gray-700">4. Integrar com sistemas e softwares</h3>
-                      <span className="text-amber-600 text-sm">Pendente</span>
-                    </div>
-                    <p className="text-[#7D7E80] text-sm">
-                      Realize a integração com os principais sistemas e softwares de gestão de restaurantes, como ERP, PDV, Delivery, etc. 
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 pt-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Progresso</span>
-                      <span className="text-gray-600">{progress}%</span>
-                    </div>
-                    <Progress value={progress} className="h-2" />
-                  </div>
-
-                  {completedSteps < totalSteps && (
-                    <Alert variant="default" className="mt-4">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Você ainda tem {totalSteps - completedSteps} etapas pendentes para completar.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-              </CardContent>
-            </Card>          
+            </div>                     
           </div>          
         </div>                       
       </SidebarInset>

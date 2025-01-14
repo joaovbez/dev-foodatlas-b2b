@@ -29,7 +29,7 @@ import {
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Checkbox } from "@/components/ui/checkboxUser"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -50,88 +50,40 @@ import {
 export type Restaurant = {
   id: string
   nome: string
-  CNPJ: string
-  unidade: string
-  endereço: string
+  email: string
+  cargo: string  
 }
 
 const data: Restaurant[] = [
   {
     id: "m5gr84i9",
-    nome: "Restaurante 1",
-    CNPJ: "04.693.001/0001-10",
-    unidade: "Osasco",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+    nome: "João Victor Bezerra Cavalcante",
+    email: "joao25victorsx@gmail.com",
+    cargo: "Gerente",    
   },
   {
     id: "3u1reuv4",
-    nome: "Restaurante 2",
-    CNPJ: "04.693.001/0001-10",
-    unidade: "Shopping JK",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+    nome: "Bruno Pimentel",
+    email: "brunopimentelfff@gmail",
+    cargo: "Administrador",    
   },
   {
     id: "derv1ws0",
-    nome: "Restaurante 3",
-    CNPJ: "83.131.001/0001-10",
-    unidade: "Villa Ema",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+    nome: "Marcelo WeissHeimer Schimdt",
+    email: "marcelowsschimdt@gmail",
+    cargo: "Chefe Executivo",    
   },
   {
     id: "3u1reuv4",
-    nome: "Restaurante 2",
-    CNPJ: "04.693.001/0001-10",
-    unidade: "Shopping JK",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+    nome: "Matheus Odaguil",
+    email: "matheusodaguil@gmail",
+    cargo: "Chefe de RH",    
   },
   {
     id: "derv1ws0",
-    nome: "Restaurante 3",
-    CNPJ: "83.131.001/0001-10",
-    unidade: "Villa Ema",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
-  },
-  {
-    id: "3u1reuv4",
-    nome: "Restaurante 2",
-    CNPJ: "04.693.001/0001-10",
-    unidade: "Shopping JK",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
-  },
-  {
-    id: "derv1ws0",
-    nome: "Restaurante 3",
-    CNPJ: "83.131.001/0001-10",
-    unidade: "Villa Ema",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
-  },
-  {
-    id: "3u1reuv4",
-    nome: "Restaurante 2",
-    CNPJ: "04.693.001/0001-10",
-    unidade: "Shopping JK",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
-  },
-  {
-    id: "derv1ws0",
-    nome: "Restaurante 3",
-    CNPJ: "83.131.001/0001-10",
-    unidade: "Villa Ema",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
-  },
-  {
-    id: "3u1reuv4",
-    nome: "Restaurante 2",
-    CNPJ: "04.693.001/0001-10",
-    unidade: "Shopping JK",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
-  },
-  {
-    id: "derv1ws0",
-    nome: "Restaurante 3",
-    CNPJ: "83.131.001/0001-10",
-    unidade: "Villa Ema",
-    endereço: "Rua Antônio Ivo, 678, Osasco, SP",
+    nome: "Gustavo Torrecilha",
+    email: "gustavotorrecilha@gmail",
+    cargo: "Engenheiro de Dados",    
   },
 ]
 
@@ -166,32 +118,17 @@ export const columns: ColumnDef<Restaurant>[] = [
     ),
   },
   {
-    accessorKey: "unidade",
-    header: "Unidade",
+    accessorKey: "cargo",
+    header: "Cargo",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("unidade")}</div>
+      <div className="capitalize">{row.getValue("cargo")}</div>
     ),
   },
   {
-    accessorKey: "endereço",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Endereço
-          <ArrowUpDown />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div>{row.getValue("endereço")}</div>,
-  },
-  {
-    accessorKey: "CNPJ",
-    header: () => <div className="text-right">CNPJ</div>,
+    accessorKey: "email",
+    header: () => <div className="text-right">Email</div>,
     cell: ({ row }) => {      
-      return <div className="text-right font-medium">{row.getValue("CNPJ")}</div>
+      return <div className="text-right font-medium">{row.getValue("email")}</div>
     },
   },
   {
@@ -213,14 +150,14 @@ export const columns: ColumnDef<Restaurant>[] = [
                 <AlertDialogTrigger className="text-red relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&>svg]:size-4 [&>svg]:shrink-0">Remover</AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Tem certeza que deseja remover este restaurante?</AlertDialogTitle>
+                    <AlertDialogTitle>Tem certeza que deseja remover este usuário?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Ao removê-lo, você perderá todos os dados relacionados ao mesmo e deverá configurar novamente suas integrações com o FoodAtlas.
+                      Ao removê-lo, ele perderá qualquer permissão para acessar esta plataforma e visualizar os dados do restaurante.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction className="bg-red text-bold text-black/90 hover:bg-red/80">Sim, quero remover.</AlertDialogAction>
+                    <AlertDialogAction className="bg-red text-bold">Sim, quero remover.</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>  
@@ -300,7 +237,7 @@ export function DataTable() {
       </div>
       <div className="rounded-md border">
         <Table>
-          <TableHeader className="bg-green/20">
+          <TableHeader className="bg-purple/20">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -350,12 +287,12 @@ export function DataTable() {
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+          {table.getFilteredSelectedRowModel().rows.length} de{" "}
+          {table.getFilteredRowModel().rows.length} itens selecionados.
         </div>
         <div className="space-x-2">
           <Button
-            className="bg-green"
+            className="bg-purple"
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
@@ -364,7 +301,7 @@ export function DataTable() {
             Anterior
           </Button>
           <Button
-            className="bg-green"
+            className="bg-purple"
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
