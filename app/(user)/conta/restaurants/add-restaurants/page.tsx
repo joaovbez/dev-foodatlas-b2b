@@ -1,18 +1,37 @@
 import * as React from "react"
- 
+import { redirect } from "next/navigation"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 async function handleSubmit(formData: FormData) {
   'use server'
-  // Aqui você pode adicionar a lógica para processar os dados do formulário
-  const nome = formData.get('nome')
-  const unidade = formData.get('unidade')
-  const endereco = formData.get('endereco')
-  const cnpj = formData.get('cnpj')
-  console.log('Dados do restaurante:', { nome, unidade, endereco, cnpj })
-  // Implementar lógica de redirecionamento ou processamento adicional
+  try {
+    const data = {
+      name: formData.get('nome') as string,
+      cnpj: formData.get('cnpj') as string,
+      address: formData.get('endereco') as string,
+      phone: formData.get('unidade') as string, // usando o campo unidade como phone por enquanto
+    }
+
+    const response = await fetch('/api/restaurants', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      throw new Error('Erro ao criar restaurante')
+    }
+
+    redirect('/conta/restaurants/list-restaurants')
+  } catch (error) {
+    console.error('Erro:', error)
+    redirect('/conta/restaurants/add-restaurants?error=true')
+  }
 }
 
 import {  

@@ -1,17 +1,12 @@
 "use client"
 
 import * as React from "react"
+import { useSession } from "next-auth/react"
+import { useEffect, useState } from "react"
 import {
-  Frame,
   Brain,
-  ChartSpline,
-  Package,
   Store,
-  Building,
-  CircleDollarSign,
-  Star,
-  Settings, 
-  HelpCircle,
+  Loader2,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -26,190 +21,100 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "João Victor",
-    email: "joaovictor@gmail.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Restaurante 1",
-      logo: Store,
-      plan: "Comida Italiana",
-    },
-    {
-      name: "Restaurante 2",
-      logo: Store,
-      plan: "Comida Mexicana",
-    },
-    {
-      name: "Restaurante 3",
-      logo: Store,
-      plan: "Comida Japonesa",
-    },
-  ],
-  navMain: [
-    {
-      title: "Inteligência Artificial",
-      url: "#",
-      icon: Brain, 
-      isActive: true,     
-      items: [
-        {
-          title: "Chat",
-          url: "#",
-        },
-        {
-          title: "Insights Salvos",
-          url: "#",
-        },        
-      ],
-    },
-    {
-      title: "DashBoard",
-      url: "#",
-      icon: ChartSpline,
-      items: [
-        {
-          title: "Opção 1",
-          url: "#",
-        },
-        {
-          title: "Opção 2",
-          url: "#",
-        },
-        {
-          title: "Opção 3",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Delivery",
-      url: "#",
-      icon: Package,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Loja Física",
-      url: "#",
-      icon: Building,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Financeiro",
-      url: "#",
-      icon: CircleDollarSign,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Avaliações",
-      url: "#",
-      icon: Star,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Integrações",
-      url: "#",
-      icon: Frame,
-    },    
-    {
-      name: "Configurações",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      name: "Ajuda",
-      url: "#",
-      icon: HelpCircle,
-    },
-  ],
+interface Restaurant {
+  id: string
+  name: string
+  cnpj: string
+  address?: string
+  phone?: string
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: session } = useSession()
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  const user = {
+    name: session?.user?.name || "Usuário",
+    email: session?.user?.email || "usuario@exemplo.com",
+    avatar: session?.user?.image || "",
+  }
+
+  useEffect(() => {
+    async function loadRestaurants() {
+      try {
+        const response = await fetch("/api/restaurants")
+        if (!response.ok) throw new Error("Falha ao carregar restaurantes")
+        const data = await response.json()
+        setRestaurants(data)
+      } catch (error) {
+        console.error("Erro ao carregar restaurantes:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadRestaurants()
+  }, [])
+
+  // Formatar dados dos restaurantes para o TeamSwitcher
+  const teamsData = restaurants.map(restaurant => ({
+    id: restaurant.id,
+    name: restaurant.name,
+    logo: Store,
+    plan: restaurant.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5"),
+  }))
+
+  const navMainData = [
+    {
+      title: "Inteligência Artificial",
+      url: "/conta/ai",
+      icon: Brain,
+      items: [
+        {
+          title: "Chat",
+          url: "/conta/ai/chat",
+        },
+      ],
+    },
+    {
+      title: "Restaurantes",
+      url: "/conta/restaurants",
+      icon: Store,
+      items: [
+        {
+          title: "Listar",
+          url: "/conta/restaurants",
+        },
+        {
+          title: "Adicionar",
+          url: "/conta/restaurants/add",
+        },
+      ],
+    },
+  ]
+
+  if (loading) {
+    return (
+      <Sidebar collapsible="icon" {...props}>
+        <div className="flex h-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </Sidebar>
+    )
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={teamsData} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={navMainData} />
+        <NavProjects projects={[]} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

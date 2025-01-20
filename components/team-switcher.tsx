@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ChevronsUpDown, Plus } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import {
   DropdownMenu,
@@ -20,17 +21,26 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
+interface Team {
+  id: string
+  name: string
+  logo: React.ElementType
+  plan: string
+}
+
 export function TeamSwitcher({
   teams,
 }: {
-  teams: {
-    name: string
-    logo: React.ElementType
-    plan: string
-  }[]
+  teams: Team[]
 }) {
   const { isMobile } = useSidebar()
-  const [activeTeam, setActiveTeam] = React.useState(teams[0])
+  const router = useRouter()
+  const [activeTeam, setActiveTeam] = React.useState<Team | null>(teams[0] || null)
+
+  const handleTeamSelect = (team: Team) => {
+    setActiveTeam(team)
+    router.push(`/conta/restaurants/${team.id}`)
+  }
 
   return (
     <SidebarMenu>
@@ -41,15 +51,24 @@ export function TeamSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-green text-sidebar-primary-foreground">
-                <activeTeam.logo className="size-4 text-black" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">
-                  {activeTeam.name}
-                </span>
-                <span className="truncate text-xs">{activeTeam.plan}</span>
-              </div>
+              {activeTeam ? (
+                <>
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-green text-sidebar-primary-foreground">
+                    <activeTeam.logo className="size-4 text-black" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">
+                      {activeTeam.name}
+                    </span>
+                    <span className="truncate text-xs">CNPJ: {activeTeam.plan}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Plus className="size-4" />
+                  <span>Selecione um Restaurante</span>
+                </div>
+              )}
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -60,12 +79,12 @@ export function TeamSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Teams
+              Seus Restaurantes
             </DropdownMenuLabel>
             {teams.map((team, index) => (
               <DropdownMenuItem
-                key={team.name}
-                onClick={() => setActiveTeam(team)}
+                key={team.id}
+                onClick={() => handleTeamSelect(team)}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
@@ -80,7 +99,7 @@ export function TeamSwitcher({
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
               </div>
-              <Link href="/conta/restaurants/add-restaurants"> Adicionar Restaurante </Link>
+              <Link href="/conta/restaurants/add">Adicionar Restaurante</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
