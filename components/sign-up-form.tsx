@@ -159,7 +159,7 @@ export function SignUpForm({
             name="email" 
             id="email" 
             type="email" 
-            placeholder="m@example.com" 
+            placeholder="m@examplo.com" 
             required 
           />
         </div>
@@ -194,23 +194,22 @@ export function SignUpForm({
                   </p>
                 )}
               </div>
-              
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">Requisitos da senha:</p>
-                <ul className="space-y-2">
+              <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p className="text-sm font-semibold text-gray-800">Requisitos da senha:</p>
+                <ul className="space-y-2.5">
                   {requirements.map((requirement, index) => (
                     <li 
                       key={index} 
-                      className="flex items-center gap-2 text-sm"
+                      className="flex items-center gap-3 text-sm bg-white p-2.5 rounded-md shadow-sm"
                     >
                       {requirement.validator(password) ? (
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-5 w-5 text-green-600 flex-shrink-0" />
                       ) : (
-                        <X className="h-4 w-4 text-red-500" />
+                        <X className="h-5 w-5 text-red-500 flex-shrink-0" />
                       )}
                       <span className={cn(
                         "transition-colors duration-200",
-                        requirement.validator(password) ? "text-green-700" : "text-gray-600"
+                        requirement.validator(password) ? "text-green-800 font-medium" : "text-gray-700"
                       )}>
                         {requirement.text}
                       </span>
