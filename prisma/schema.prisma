@@ -24,15 +24,30 @@ model User {
 }
 
 model Restaurant {
-  id          String   @id @default(cuid())
-  name        String
-  cnpj        String   @unique
-  address     String?
-  phone       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  cnpj      String
+  address   String?
+  phone     String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  files     RestaurantFile[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relação com usuário (dono)
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  @@index([userId])
+}
+
+model RestaurantFile {
+  id           String     @id @default(cuid())
+  name         String
+  size         Int
+  type         String
+  url          String
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([restaurantId])
 }

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2 } from "lucide-react"
+import { Loader2, ArrowLeft } from "lucide-react"
 import { IMaskInput } from "react-imask"
 
 export default function AddRestaurantPage() {
@@ -75,6 +75,13 @@ export default function AddRestaurantPage() {
     <>
       <header className="flex h-16 shrink-0 items-center gap-2 border-b">
         <div className="flex items-center gap-2 px-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/conta/restaurants")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <h1 className="text-lg font-semibold">Adicionar Novo Restaurante</h1>
         </div>
       </header>

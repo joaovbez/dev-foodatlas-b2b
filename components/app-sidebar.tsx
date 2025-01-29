@@ -7,6 +7,7 @@ import {
   Brain,
   Store,
   Loader2,
+  Home,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -67,6 +68,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const navMainData = [
     {
+      title: "Início",
+      url: "/conta",
+      icon: Home,
+      items: [
+        {
+          title: "Serviços",
+          url: "/conta/services",
+        },
+      ],
+    },
+    {
       title: "Inteligência Artificial",
       url: "/conta/ai",
       icon: Brain,
@@ -78,7 +90,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       ],
     },
     {
-      title: "Restaurantes",
+      title: "Restaurantes", 
       url: "/conta/restaurants",
       icon: Store,
       items: [

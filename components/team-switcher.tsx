@@ -33,7 +33,7 @@ export function TeamSwitcher({
 }: {
   teams: Team[]
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile, state } = useSidebar()
   const router = useRouter()
   const [activeTeam, setActiveTeam] = React.useState<Team | null>(teams[0] || null)
 
@@ -51,7 +51,11 @@ export function TeamSwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              {activeTeam ? (
+              {state === "collapsed" ? (
+                <div className="flex w-full items-center justify-center">
+                  <Plus className="size-4" />
+                </div>
+              ) : activeTeam ? (
                 <>
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-green text-sidebar-primary-foreground">
                     <activeTeam.logo className="size-4 text-black" />
@@ -69,7 +73,7 @@ export function TeamSwitcher({
                   <span>Selecione um Restaurante</span>
                 </div>
               )}
-              <ChevronsUpDown className="ml-auto" />
+              {state !== "collapsed" && <ChevronsUpDown className="ml-auto" />}
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent

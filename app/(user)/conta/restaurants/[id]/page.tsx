@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Loader2, PenSquare, FolderOpen, ArrowLeft, FileText } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2 } from "lucide-react"
-import { IMaskInput } from "react-imask"
 
 interface Restaurant {
   id: string
@@ -15,6 +13,15 @@ interface Restaurant {
   cnpj: string
   address?: string
   phone?: string
+  createdAt: string
+}
+
+interface RestaurantFile {
+  id: string
+  name: string
+  size: number
+  createdAt: string
+  type: string
 }
 
 export default function RestaurantDetailsPage({
@@ -23,89 +30,38 @@ export default function RestaurantDetailsPage({
   params: { id: string }
 }) {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
+  const [recentFiles, setRecentFiles] = useState<RestaurantFile[]>([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
   useEffect(() => {
-    async function loadRestaurant() {
+    async function loadRestaurantData() {
       try {
         const response = await fetch(`/api/restaurants/${params.id}`)
-        if (!response.ok) throw new Error("Falha ao carregar restaurante")
+        if (!response.ok) throw new Error("Falha ao carregar dados do restaurante")
         const data = await response.json()
         setRestaurant(data)
+
+        // Carregar arquivos recentes
+        const filesResponse = await fetch(`/api/restaurants/${params.id}/files?limit=5`)
+        if (filesResponse.ok) {
+          const filesData = await filesResponse.json()
+          setRecentFiles(filesData)
+        }
       } catch (error) {
-        console.error("Erro:", error)
         toast({
           variant: "destructive",
           title: "Erro",
-          description: "Falha ao carregar dados do restaurante",
+          description: "Não foi possível carregar os dados do restaurante",
         })
       } finally {
         setLoading(false)
       }
     }
 
-    loadRestaurant()
+    loadRestaurantData()
   }, [params.id, toast])
-
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSaving(true)
-
-    try {
-      const formData = new FormData(event.currentTarget)
-      const cnpjValue = formData.get("cnpj") as string
-      const phoneValue = formData.get("phone") as string
-
-      const data = {
-        name: (formData.get("name") as string).trim(),
-        cnpj: cnpjValue ? cnpjValue.replace(/\D/g, "") : "",
-        address: (formData.get("address") as string)?.trim() || "",
-        phone: phoneValue ? phoneValue.replace(/\D/g, "") : "",
-      }
-
-      // Validações
-      if (!data.name) {
-        throw new Error("Nome do restaurante é obrigatório")
-      }
-
-      if (!data.cnpj || data.cnpj.length !== 14) {
-        throw new Error("CNPJ inválido")
-      }
-
-      const response = await fetch(`/api/restaurants/${params.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(errorText)
-      }
-
-      toast({
-        title: "Sucesso",
-        description: "Restaurante atualizado com sucesso",
-      })
-
-      router.push("/conta/restaurants")
-      router.refresh()
-    } catch (error) {
-      console.error("Erro ao atualizar:", error)
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Falha ao atualizar restaurante",
-      })
-    } finally {
-      setSaving(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -116,86 +72,131 @@ export default function RestaurantDetailsPage({
   }
 
   if (!restaurant) {
-    return <div>Restaurante não encontrado</div>
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <p className="text-muted-foreground">Restaurante não encontrado</p>
+      </div>
+    )
   }
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b">
-        <div className="flex items-center gap-2 px-4">
-          <h1 className="text-lg font-semibold">Editar Restaurante</h1>
+      <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push("/conta/restaurants")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex flex-col">
+            <p className="text-sm font-medium text-muted-foreground">Restaurante</p>
+            <h1 className="text-xl font-bold tracking-tight">{restaurant.name}</h1>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/conta/restaurants/${params.id}/files`)}
+          >
+            <FolderOpen className="mr-2 h-4 w-4" />
+            Gerenciar Arquivos
+          </Button>
+          <Button 
+            onClick={() => router.push(`/conta/restaurants/${params.id}/edit`)}
+          >
+            <PenSquare className="mr-2 h-4 w-4" />
+            Editar Restaurante
+          </Button>
         </div>
       </header>
 
-      <main className="flex-1 p-8">
-        <div className="mx-auto max-w-2xl">
-          <form onSubmit={onSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome do Restaurante</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Ex: Restaurante do João"
-                defaultValue={restaurant.name}
-                required
-              />
+      <main className="flex-1 space-y-8 p-8">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-semibold tracking-tight">Informações do Restaurante</h2>
+            <div className="h-4 w-[2px] bg-border" />
+            <p className="text-sm text-muted-foreground">CNPJ: {restaurant.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}</p>
+          </div>
+          <div className="grid gap-6 rounded-lg border p-6">
+            {restaurant.address && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Endereço</p>
+                <p className="mt-1 text-base">{restaurant.address}</p>
+              </div>
+            )}
+            {restaurant.phone && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Telefone</p>
+                <p className="mt-1 text-base">{restaurant.phone}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Data de Cadastro</p>
+              <p className="mt-1 text-base">
+                {new Date(restaurant.createdAt).toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric"
+                })}
+              </p>
             </div>
+          </div>
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="cnpj">CNPJ</Label>
-              <IMaskInput
-                mask="00.000.000/0000-00"
-                id="cnpj"
-                name="cnpj"
-                placeholder="00.000.000/0000-00"
-                defaultValue={restaurant.cnpj}
-                required
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
+        <Separator className="my-8" />
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h2 className="text-xl font-semibold tracking-tight">Arquivos Recentes</h2>
+              <p className="text-sm text-muted-foreground">
+                Últimos arquivos adicionados ao restaurante
+              </p>
             </div>
+            <Button
+              variant="ghost"
+              onClick={() => router.push(`/conta/restaurants/${params.id}/files`)}
+            >
+              Ver todos
+            </Button>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input
-                id="address"
-                name="address"
-                placeholder="Ex: Rua das Flores, 123 - Centro"
-                defaultValue={restaurant.address}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <IMaskInput
-                mask="(00) 00000-0000"
-                id="phone"
-                name="phone"
-                placeholder="(00) 00000-0000"
-                defaultValue={restaurant.phone}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-
-            <div className="flex gap-4">
-              <Button type="submit" disabled={saving}>
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  "Salvar Alterações"
-                )}
-              </Button>
+          {recentFiles.length === 0 ? (
+            <div className="rounded-lg border-2 border-dashed p-8 text-center">
+              <h3 className="text-lg font-medium">Nenhum arquivo encontrado</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Comece fazendo upload dos arquivos do seu restaurante
+              </p>
               <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push("/conta/restaurants")}
+                onClick={() => router.push(`/conta/restaurants/${params.id}/files`)}
+                className="mt-4"
               >
-                Cancelar
+                Gerenciar Arquivos
               </Button>
             </div>
-          </form>
+          ) : (
+            <div className="divide-y rounded-lg border">
+              {recentFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{file.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(file.createdAt).toLocaleDateString("pt-BR")} •{" "}
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </>
