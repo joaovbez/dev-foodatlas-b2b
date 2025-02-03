@@ -1,6 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { Toaster } from "@/components/ui/toaster"
 import ProtectedLayout from "@/components/protected-layout"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -22,9 +23,9 @@ export default function UserLayout({
   children: React.ReactNode
 }) {
   return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
@@ -43,7 +44,8 @@ export default function UserLayout({
               </BreadcrumbList>
             </Breadcrumb>            
           </div>
-          <div className="flex flex-1 justify-end p-4">
+          <div className="flex flex-1 items-center justify-end gap-4 p-4">
+            <ThemeToggle />
             <img
               src="/foodatlas_LOGOS_Prancheta 1.svg"
               alt="Logo"
@@ -51,9 +53,9 @@ export default function UserLayout({
             />
           </div>
         </header>
-          {children}
-        </SidebarInset>
-        <Toaster />
-      </SidebarProvider>
+        {children}
+      </SidebarInset>
+      <Toaster />
+    </SidebarProvider>
   )
 } 

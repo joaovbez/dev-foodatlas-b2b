@@ -5,7 +5,8 @@ import type { NextRequest } from "next/server"
 export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request })
   const isAuthPage = request.nextUrl.pathname.startsWith("/login") || 
-                     request.nextUrl.pathname.startsWith("/sign-up")
+                     request.nextUrl.pathname.startsWith("/sign-up") ||
+                     request.nextUrl.pathname.startsWith("/verify-email")
 
   if (isAuthPage) {
     if (token) {
@@ -15,8 +16,12 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!token) {
-    const redirectUrl = new URL("/login", request.url)
-    redirectUrl.searchParams.set("callbackUrl", request.nextUrl.pathname)
+    let redirectUrl = new URL("/login", request.url)
+    
+    if (!request.nextUrl.pathname.startsWith("/verify-email")) {
+      redirectUrl.searchParams.set("callbackUrl", request.nextUrl.pathname)
+    }
+    
     return NextResponse.redirect(redirectUrl)
   }
 

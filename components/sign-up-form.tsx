@@ -104,25 +104,12 @@ export function SignUpForm({
         throw new Error(error)
       }
 
-      // 2. Enviar código de verificação
-      const verifyRes = await fetch("/api/auth/verify-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      if (!verifyRes.ok) {
-        throw new Error("Erro ao enviar código de verificação")
-      }
-
       toast({
         title: "Conta criada com sucesso!",
         description: "Verifique seu email para ativar sua conta.",
       })
 
-      // Redirecionar para página de verificação
+      // Redirecionamento direto
       router.push(`/verify-email?email=${encodeURIComponent(email)}`)
     } catch (error) {
       toast({

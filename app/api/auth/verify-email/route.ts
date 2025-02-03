@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     try {
       // Enviar email com o código
       const emailResult = await resend.emails.send({
-        from: "FoodAtlas <noreply@foodatlas.com.br>",
+        from: "FoodAtlas <noreply@foodatlas.org>",
         to: email,
         subject: "Verifique seu email - FoodAtlas",
         html: emailVerificationTemplate({

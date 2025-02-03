@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
 
 export function LoginForm({
   className,
@@ -34,42 +35,47 @@ export function LoginForm({
         redirect: false,
       })
 
-      if (result?.error) {
-        if (result.error.includes("verifique seu email")) {
-          toast({
-            variant: "destructive",
-            title: "Email não verificado",
-            description: "Por favor, verifique seu email antes de fazer login.",
-          })
-          
-          // Redirecionar para página de verificação
-          router.push(`/verify-email?email=${encodeURIComponent(email)}`)
-          return
+      if (result?.error === "EMAIL_NOT_VERIFIED") {
+        const verifyRes = await fetch("/api/auth/verify-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        })
+
+        if (!verifyRes.ok) {
+          throw new Error("Erro ao enviar código de verificação")
         }
 
         toast({
-          variant: "destructive",
-          title: "Erro ao fazer login",
-          description: result.error,
+          title: "Email não verificado",
+          description: "Enviamos um novo código de verificação para seu email.",
         })
+
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`)
         return
       }
 
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Redirecionando para sua conta...",
-      })
+      if (result?.error) {
+        throw new Error(result.error)
+      }
 
-      setTimeout(() => {
-        const callbackUrl = searchParams.get("callbackUrl") || "/conta"
-        router.push(callbackUrl)
+      if (result?.ok) {
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Redirecionando para sua conta...",
+        })
+
+        const callbackUrl = searchParams.get("callbackUrl")
+        router.push(callbackUrl || "/conta")
         router.refresh()
-      }, 1500)
+      }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao fazer login. Tente novamente mais tarde.",
+        title: "Erro ao fazer login",
+        description: error instanceof Error ? error.message : "Algo deu errado",
       })
     } finally {
       setLoading(false)

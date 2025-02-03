@@ -1,10 +1,11 @@
+import { NextRequest, NextResponse } from "next/server"
+import { bucket } from "@/lib/google-cloud-storage"
+import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { prisma } from "@/lib/prisma"
-import { NextResponse } from "next/server"
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string; fileId: string } }
 ) {
   try {
@@ -13,12 +14,12 @@ export async function DELETE(
       return new NextResponse("Não autorizado", { status: 401 })
     }
 
-    // Verificar se o arquivo pertence ao restaurante do usuário
-    const file = await prisma.restaurantFile.findFirst({
+    // Buscar o arquivo e verificar permissões
+    const file = await prisma.RestaurantFile.findFirst({
       where: {
         id: params.fileId,
+        restaurantId: params.id,
         restaurant: {
-          id: params.id,
           userId: session.user.id,
         },
       },
@@ -28,18 +29,25 @@ export async function DELETE(
       return new NextResponse("Arquivo não encontrado", { status: 404 })
     }
 
-    // Aqui você implementaria a lógica para excluir o arquivo do seu serviço de armazenamento
+    // Extrair o nome do arquivo da URL
+    const filePathMatch = file.url.match(/restaurants\/.*$/)
+    if (!filePathMatch) {
+      throw new Error("URL do arquivo inválida")
+    }
 
-    // Excluir o registro do banco de dados
-    await prisma.restaurantFile.delete({
+    // Deletar do Google Cloud Storage
+    await bucket.file(filePathMatch[0]).delete()
+
+    // Deletar do banco de dados
+    await prisma.RestaurantFile.delete({
       where: {
-        id: params.fileId,
+        id: file.id,
       },
     })
 
     return new NextResponse(null, { status: 204 })
   } catch (error) {
-    console.error("Erro ao excluir arquivo:", error)
-    return new NextResponse("Erro interno", { status: 500 })
+    console.error("Erro ao deletar arquivo:", error)
+    return new NextResponse("Erro interno do servidor", { status: 500 })
   }
 } 

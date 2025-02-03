@@ -60,9 +60,14 @@ module.exports = {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        shine: {
+          "0%": { transform: "translateX(-100%)" },
+          "50%, 100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         shimmer: "shimmer 2s infinite",
+        shine: "shine 1s ease-in-out infinite",
       },
     },
   },

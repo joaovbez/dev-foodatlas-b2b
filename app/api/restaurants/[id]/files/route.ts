@@ -1,10 +1,12 @@
+import { NextRequest, NextResponse } from "next/server"
+import { bucket } from "@/lib/google-cloud-storage"
+import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { prisma } from "@/lib/prisma"
-import { NextResponse } from "next/server"
+import { v4 as uuidv4 } from 'uuid'
 
-export async function GET(
-  req: Request,
+export async function POST(
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -13,65 +15,96 @@ export async function GET(
       return new NextResponse("Não autorizado", { status: 401 })
     }
 
-    const { searchParams } = new URL(req.url)
-    const limit = searchParams.get("limit")
-    const page = searchParams.get("page") || "1"
-    const pageSize = limit ? parseInt(limit) : 20
-
-    const files = await prisma.restaurantFile.findMany({
+    // Verificar se o restaurante pertence ao usuário
+    const restaurant = await prisma.restaurant.findFirst({
       where: {
-        restaurantId: params.id,
-        restaurant: {
-          userId: session.user.id
-        }
+        id: params.id,
+        userId: session.user.id,
       },
-      orderBy: {
-        createdAt: "desc"
-      },
-      take: pageSize,
-      skip: (parseInt(page) - 1) * pageSize
     })
 
-    return NextResponse.json(files)
-  } catch (error) {
-    console.error("Erro ao listar arquivos:", error)
-    return new NextResponse("Erro interno", { status: 500 })
-  }
-}
-
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return new NextResponse("Não autorizado", { status: 401 })
+    if (!restaurant) {
+      return new NextResponse("Restaurante não encontrado", { status: 404 })
     }
 
     const formData = await req.formData()
     const file = formData.get("file") as File
     
     if (!file) {
-      return new NextResponse("Arquivo não fornecido", { status: 400 })
+      return new NextResponse("Nenhum arquivo enviado", { status: 400 })
     }
 
-    // Aqui você implementaria a lógica de upload do arquivo
-    // usando seu serviço de armazenamento preferido (S3, etc)
+    // Gerar nome único para o arquivo
+    const fileName = `${uuidv4()}-${file.name}`
+    const fileBuffer = Buffer.from(await file.arrayBuffer())
 
-    const fileRecord = await prisma.restaurantFile.create({
-      data: {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        restaurantId: params.id,
-        // url: URL do arquivo após upload
-      }
+    // Upload para o Google Cloud Storage
+    const blob = bucket.file(`restaurants/${restaurant.id}/${fileName}`)
+    const blobStream = blob.createWriteStream({
+      resumable: false,
+      gzip: true,
     })
 
-    return NextResponse.json(fileRecord)
+    return new Promise((resolve, reject) => {
+      blobStream.on('error', (err) => {
+        reject(new NextResponse("Erro ao fazer upload do arquivo", { status: 500 }))
+      })
+
+      blobStream.on('finish', async () => {
+        // Tornar o arquivo público
+        await blob.makePublic()
+
+        // Salvar referência no banco de dados
+        const fileRecord = await prisma.RestaurantFile.create({
+          data: {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: `https://storage.googleapis.com/${bucket.name}/${blob.name}`,
+            restaurantId: restaurant.id,
+          },
+        })
+
+        resolve(NextResponse.json(fileRecord))
+      })
+
+      blobStream.end(fileBuffer)
+    })
   } catch (error) {
     console.error("Erro ao fazer upload:", error)
-    return new NextResponse("Erro interno", { status: 500 })
+    return new NextResponse("Erro interno do servidor", { status: 500 })
+  }
+}
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return new NextResponse("Não autorizado", { status: 401 })
+    }
+
+    const searchParams = new URL(req.url).searchParams
+    const limit = Number(searchParams.get("limit")) || undefined
+
+    const files = await prisma.RestaurantFile.findMany({
+      where: {
+        restaurantId: params.id,
+        restaurant: {
+          userId: session.user.id,
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: limit,
+    })
+
+    return NextResponse.json(files)
+  } catch (error) {
+    console.error("Erro ao buscar arquivos:", error)
+    return new NextResponse("Erro interno do servidor", { status: 500 })
   }
 } 
