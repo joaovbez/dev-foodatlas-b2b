@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { bucket } from "@/lib/google-cloud-storage"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { authOptions } from "@/lib/auth-options"
+
 
 export async function DELETE(
   req: NextRequest,
@@ -15,7 +16,7 @@ export async function DELETE(
     }
 
     // Buscar o arquivo e verificar permissões
-    const file = await prisma.RestaurantFile.findFirst({
+    const file = await prisma.restaurantFile.findFirst({
       where: {
         id: params.fileId,
         restaurantId: params.id,
@@ -39,7 +40,7 @@ export async function DELETE(
     await bucket.file(filePathMatch[0]).delete()
 
     // Deletar do banco de dados
-    await prisma.RestaurantFile.delete({
+    await prisma.restaurantFile.delete({
       where: {
         id: file.id,
       },

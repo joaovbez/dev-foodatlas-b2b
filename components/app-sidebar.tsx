@@ -9,6 +9,7 @@ import {
   Loader2,
   Home,
 } from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
@@ -38,7 +39,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const user = {
     name: session?.user?.name || "Usuário",
     email: session?.user?.email || "usuario@exemplo.com",
-    avatar: session?.user?.image || "",
+    avatar: ""
   }
 
   useEffect(() => {
@@ -126,7 +127,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={[]} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser user={user}>
+          <Avatar>
+            <AvatarFallback>
+              {user.name?.charAt(0).toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+        </NavUser>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

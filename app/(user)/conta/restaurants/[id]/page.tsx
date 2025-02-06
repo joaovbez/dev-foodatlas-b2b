@@ -4,10 +4,10 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Loader2, PenSquare, FolderOpen, ArrowLeft, FileText } from "lucide-react"
-import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
+import { Skeleton, SkeletonRestaurantInfo } from "@/components/ui/skeleton"
 
-interface Restaurant {
+interface restaurant {
   id: string
   name: string
   cnpj: string
@@ -16,12 +16,13 @@ interface Restaurant {
   createdAt: string
 }
 
-interface RestaurantFile {
+interface restaurantFile {
   id: string
   name: string
   size: number
   createdAt: string
   type: string
+  url: string
 }
 
 export default function RestaurantDetailsPage({
@@ -29,8 +30,8 @@ export default function RestaurantDetailsPage({
 }: {
   params: { id: string }
 }) {
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
-  const [recentFiles, setRecentFiles] = useState<RestaurantFile[]>([])
+  const [restaurant, setRestaurant] = useState<restaurant | null>(null)
+  const [recentFiles, setRecentFiles] = useState<restaurantFile[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const { toast } = useToast()
@@ -47,9 +48,9 @@ export default function RestaurantDetailsPage({
         const filesResponse = await fetch(`/api/restaurants/${params.id}/files?limit=5`)
         if (filesResponse.ok) {
           const filesData = await filesResponse.json()
-          setRecentFiles(filesData)
+          setRecentFiles(filesData.files)
         }
-      } catch (error) {
+      } catch {
         toast({
           variant: "destructive",
           title: "Erro",
@@ -65,9 +66,24 @@ export default function RestaurantDetailsPage({
 
   if (loading) {
     return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <>
+        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/conta/restaurants")}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <Skeleton variant="title" />
+          </div>
+        </header>
+
+        <main className="flex-1 p-4 md:p-6 space-y-6">
+          <SkeletonRestaurantInfo />
+        </main>
+      </>
     )
   }
 
@@ -81,7 +97,7 @@ export default function RestaurantDetailsPage({
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -90,114 +106,113 @@ export default function RestaurantDetailsPage({
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex flex-col">
-            <p className="text-sm font-medium text-muted-foreground">Restaurante</p>
-            <h1 className="text-xl font-bold tracking-tight">{restaurant.name}</h1>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/conta/restaurants/${params.id}/files`)}
-          >
-            <FolderOpen className="mr-2 h-4 w-4" />
-            Gerenciar Arquivos
-          </Button>
-          <Button 
-            onClick={() => router.push(`/conta/restaurants/${params.id}/edit`)}
-          >
-            <PenSquare className="mr-2 h-4 w-4" />
-            Editar Restaurante
-          </Button>
+          <h1 className="text-lg font-semibold md:text-xl line-clamp-1">
+            {restaurant?.name}
+          </h1>
         </div>
       </header>
 
-      <main className="flex-1 space-y-8 p-8">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold tracking-tight">Informações do Restaurante</h2>
-            <div className="h-4 w-[2px] bg-border" />
-            <p className="text-sm text-muted-foreground">CNPJ: {restaurant.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}</p>
+      <main className="flex-1 p-4 md:p-6 space-y-6">
+        {loading ? (
+          <div className="flex h-[50vh] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-          <div className="grid gap-6 rounded-lg border p-6">
-            {restaurant.address && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Endereço</p>
-                <p className="mt-1 text-base">{restaurant.address}</p>
-              </div>
-            )}
-            {restaurant.phone && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Telefone</p>
-                <p className="mt-1 text-base">{restaurant.phone}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Data de Cadastro</p>
-              <p className="mt-1 text-base">
-                {new Date(restaurant.createdAt).toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric"
-                })}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <Separator className="my-8" />
-
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h2 className="text-xl font-semibold tracking-tight">Arquivos Recentes</h2>
-              <p className="text-sm text-muted-foreground">
-                Últimos arquivos adicionados ao restaurante
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              onClick={() => router.push(`/conta/restaurants/${params.id}/files`)}
-            >
-              Ver todos
-            </Button>
-          </div>
-
-          {recentFiles.length === 0 ? (
-            <div className="rounded-lg border-2 border-dashed p-8 text-center">
-              <h3 className="text-lg font-medium">Nenhum arquivo encontrado</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Comece fazendo upload dos arquivos do seu restaurante
-              </p>
-              <Button
-                onClick={() => router.push(`/conta/restaurants/${params.id}/files`)}
-                className="mt-4"
-              >
-                Gerenciar Arquivos
-              </Button>
-            </div>
-          ) : (
-            <div className="divide-y rounded-lg border">
-              {recentFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
+        ) : (
+          <>
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Informações do Restaurante */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Informações</h2>
+                  <Button 
+                    variant="outline" 
+                    className="hover:bg-[#A3E635]/10 hover:text-black hover:border-[#A3E635]"
+                    onClick={() => router.push(`/conta/restaurants/${params.id}/edit`)}
+                  >
+                    <PenSquare className="mr-2 h-4 w-4" />
+                    Editar
+                  </Button>
+                </div>
+                <div className="rounded-lg border p-4 space-y-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">CNPJ</p>
+                    <p className="font-medium">
+                      {restaurant?.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}
+                    </p>
+                  </div>
+                  {restaurant?.address && (
                     <div>
-                      <p className="font-medium">{file.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(file.createdAt).toLocaleDateString("pt-BR")} •{" "}
-                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      <p className="text-sm text-muted-foreground">Endereço</p>
+                      <p className="font-medium">{restaurant.address}</p>
+                    </div>
+                  )}
+                  {restaurant?.phone && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Telefone</p>
+                      <p className="font-medium">
+                        {restaurant.phone.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3")}
                       </p>
                     </div>
-                  </div>
+                  )}
                 </div>
-              ))}
+              </div>
+
+              {/* Arquivos Recentes */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Arquivos Recentes</h2>
+                  <Button variant="outline" onClick={() => router.push(`/conta/restaurants/${params.id}/files`)}>
+                    <FolderOpen className="mr-2 h-4 w-4" />
+                    Gerenciar Arquivos
+                  </Button>
+                </div>
+
+                {recentFiles.length === 0 ? (
+                  <div className="rounded-lg border-2 border-dashed p-6 text-center">
+                    <h3 className="font-medium">Nenhum arquivo encontrado</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Comece fazendo upload dos arquivos do seu restaurante
+                    </p>
+                    <Button
+                      onClick={() => router.push(`/conta/restaurants/${params.id}/files`)}
+                      className="mt-4"
+                    >
+                      Gerenciar Arquivos
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border divide-y">
+                    {recentFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{file.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB •{" "}
+                              {new Date(file.createdAt).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => window.open(file.url, "_blank")}
+                          className="flex-shrink-0"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
+          </>
+        )}
       </main>
     </>
   )

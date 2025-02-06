@@ -1,14 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import logo_1 from "@/public/foodatlas_LOGOS-09.svg"
-import logo_2 from "@/public/foodatlas_LOGOS_Prancheta 1 cópia 3.svg"
 
 export default function VerifyEmailPage() {
+  return (
+    <div className="grid min-h-svh lg:grid-cols-2">
+      <Suspense fallback={<div>Carregando...</div>}>
+        <VerifyEmailContent />
+      </Suspense>
+    </div>
+  )
+}
+
+function VerifyEmailContent() {
   const [code, setCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
@@ -94,58 +103,46 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-1 flex-col items-center gap-4 justify-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground">
-          <img
-            src={logo_1.src}
-            alt="Custom Icon"
-            className="h-14 w-14"
-          />
-        </div>
-        
-        <div className="w-full max-w-xs space-y-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-700">Verifique seu email</h1>
-            <p className="mt-2 text-sm text-gray-600">
-              Digite o código de verificação enviado para {email}
-            </p>
-          </div>
-
-          <form onSubmit={onSubmit} className="space-y-6">
-            <Input
-              type="text"
-              placeholder="Digite o código"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              maxLength={6}
-              className="text-center text-2xl tracking-widest"
-            />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Verificando..." : "Verificar"}
-            </Button>
-          </form>
-
-          <div className="text-center">
-            <Button
-              variant="link"
-              onClick={resendCode}
-              disabled={resending}
-              className="text-sm text-muted-foreground"
-            >
-              {resending ? "Reenviando..." : "Não recebeu o código? Clique para reenviar"}
-            </Button>
-          </div>
-        </div>
+    <div className="flex flex-1 flex-col items-center gap-4 justify-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground">
+        <img
+          src={logo_1.src}
+          alt="Custom Icon"
+          className="h-14 w-14"
+        />
       </div>
       
-      <div className="relative hidden bg-muted lg:block">
-        <div className="absolute inset-0 z-10 bg-black flex items-center justify-center">
-          <img
-            src={logo_2.src}
-            alt="Logo"
-            className="h-auto w-auto object-contain"
+      <div className="w-full max-w-xs space-y-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-700">Verifique seu email</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Digite o código de verificação enviado para {email}
+          </p>
+        </div>
+
+        <form onSubmit={onSubmit} className="space-y-6">
+          <Input
+            type="text"
+            placeholder="Digite o código"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            maxLength={6}
+            className="text-center text-2xl tracking-widest"
           />
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Verificando..." : "Verificar"}
+          </Button>
+        </form>
+
+        <div className="text-center">
+          <Button
+            variant="link"
+            onClick={resendCode}
+            disabled={resending}
+            className="text-sm text-muted-foreground"
+          >
+            {resending ? "Reenviando..." : "Não recebeu o código? Clique para reenviar"}
+          </Button>
         </div>
       </div>
     </div>

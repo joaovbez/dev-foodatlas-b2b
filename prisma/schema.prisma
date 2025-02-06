@@ -20,10 +20,10 @@ model User {
   updatedAt       DateTime  @updatedAt
 
   // Relação com restaurantes
-  restaurants     Restaurant[]
+  restaurants     restaurant[]
 }
 
-model Restaurant {
+model restaurant {
   id        String   @id @default(cuid())
   name      String
   cnpj      String
@@ -31,21 +31,21 @@ model Restaurant {
   phone     String?
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  files     RestaurantFile[]
+  files     restaurantFile[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
 
-model RestaurantFile {
+model restaurantFile {
   id           String     @id @default(cuid())
   name         String
   size         Int
   type         String
   url          String
   restaurantId String
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant   restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 

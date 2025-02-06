@@ -1,6 +1,7 @@
+"use client"
+
 import { AppSidebar } from "@/components/app-sidebar"
 import { Toaster } from "@/components/ui/toaster"
-import ProtectedLayout from "@/components/protected-layout"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
   Breadcrumb,
@@ -16,12 +17,16 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { useTheme } from "next-themes"
+import Image from 'next/image'
 
 export default function UserLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const { theme } = useTheme()
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -46,10 +51,13 @@ export default function UserLayout({
           </div>
           <div className="flex flex-1 items-center justify-end gap-4 p-4">
             <ThemeToggle />
-            <img
-              src="/foodatlas_LOGOS_Prancheta 1.svg"
+            <Image
+              src={theme === 'dark' ? '/foodatlas_logo_branco.png' : '/foodatlas_LOGOS_Prancheta 1.svg'}
               alt="Logo"
-              className="h-20 w-auto" 
+              width={80}
+              height={80}
+              className="h-20 w-auto"
+              priority
             />
           </div>
         </header>

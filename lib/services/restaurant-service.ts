@@ -1,4 +1,4 @@
-import { Restaurant } from "@prisma/client"
+
 
 type CreateRestaurantData = {
   name: string

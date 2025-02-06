@@ -32,6 +32,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ user: { email: user.email, name: user.name } })
   } catch (error) {
-    return new NextResponse("Erro interno", { status: 500 })
+    return new NextResponse("Erro interno:" + error, { status: 500 })
   }
 }

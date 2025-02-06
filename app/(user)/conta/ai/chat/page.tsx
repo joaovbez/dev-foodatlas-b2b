@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Send, Bot, Store, Sparkles, ChevronDown } from 'lucide-react'
+import { Send, Bot, Store, Loader2 } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
@@ -75,19 +75,22 @@ export default function AIChatPage() {
     async function loadRestaurants() {
       try {
         const response = await fetch('/api/restaurants')
-        if (!response.ok) throw new Error('Falha ao carregar restaurantes')
+        if (!response.ok) {
+          const errorData = await response.text()
+          throw new Error(errorData)
+        }
         const data = await response.json()
         setRestaurants(data)
         
-        // Seleciona o primeiro restaurante por padrão se existir
         if (data.length > 0) {
           setSelectedRestaurant(data[0].id)
         }
       } catch (error) {
+        console.error('Erro ao carregar restaurantes:', error)
         toast({
           variant: "destructive",
           title: "Erro",
-          description: "Não foi possível carregar seus restaurantes",
+          description: error instanceof Error ? error.message : "Não foi possível carregar seus restaurantes",
         })
       } finally {
         setLoading(false)
@@ -103,8 +106,16 @@ export default function AIChatPage() {
     
     setIsTyping(true)
     try {
-      // Aqui você implementará a chamada à API do chat
-      // Passando o ID do restaurante selecionado
+      // Adiciona mensagem do usuário
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: message,
+        role: 'user',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, userMessage])
+      setMessage('')
+
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
@@ -118,12 +129,22 @@ export default function AIChatPage() {
 
       if (!response.ok) throw new Error('Falha ao processar mensagem')
 
-      // Processar resposta...
+      const data = await response.json()
+      
+      // Adiciona resposta do assistente
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.message,
+        role: 'assistant',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, assistantMessage])
+
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível processar sua mensagem",
+        description: "Não foi possível processar sua mensagem: " + error,
       })
     } finally {
       setIsTyping(false)
@@ -134,7 +155,7 @@ export default function AIChatPage() {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <div className="space-y-2 text-center">
-          <Sparkles className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
           <p className="text-sm text-muted-foreground">Carregando...</p>
         </div>
       </div>
@@ -217,7 +238,7 @@ export default function AIChatPage() {
             <Card className="p-4 border-primary/20">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                  <Bot className="w-4 h-4 text-primary" />
                   <p className="text-sm font-medium text-muted-foreground">
                     Sugestões de Perguntas
                   </p>
