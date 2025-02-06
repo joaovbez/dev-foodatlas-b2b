@@ -52,7 +52,7 @@ export default function UserLayout({
           <div className="flex flex-1 items-center justify-end gap-4 p-4">
             <ThemeToggle />
             <Image
-              src={theme === 'dark' ? '/foodatlas_logo_branco.png' : '/foodatlas_LOGOS_Prancheta 1.svg'}
+              src={theme === 'light' ? '/foodatlas_LOGOS_Prancheta 1.svg' : '/foodatlas_logo_branco.png'}
               alt="Logo"
               width={80}
               height={80}
