@@ -95,16 +95,16 @@ export default function AIChatPage() {
       } finally {
         setLoading(false)
       }
-    }
+    } 
 
     loadRestaurants()
   }, [toast])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!message.trim() || !selectedRestaurant) return
-    
-    setIsTyping(true)
+    e.preventDefault();
+    if (!message.trim() || !selectedRestaurant) return;
+  
+    setIsTyping(true);
     try {
       // Adiciona mensagem do usuário
       const userMessage: Message = {
@@ -112,44 +112,45 @@ export default function AIChatPage() {
         content: message,
         role: 'user',
         timestamp: new Date()
-      }
-      setMessages(prev => [...prev, userMessage])
-      setMessage('')
-
-      const response = await fetch('/api/ai/chat', {
+      };
+      setMessages(prev => [...prev, userMessage]);
+      setMessage('');
+  
+      // Chama o novo endpoint de chat passando a pergunta como "question"
+      const response = await fetch(`/api/restaurants/${selectedRestaurant}/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          restaurantId: selectedRestaurant,
-        }),
-      })
-
-      if (!response.ok) throw new Error('Falha ao processar mensagem')
-
-      const data = await response.json()
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: message }),
+      });
       
-      // Adiciona resposta do assistente
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Erro do backend:", errorData);
+        throw new Error(errorData.error || 'Falha ao processar mensagem');
+      }
+  
+      const data = await response.json();
+  
+      // Adiciona a resposta do assistente, utilizando a propriedade "answer" retornada pelo backend
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.message,
+        content: data.answer,
         role: 'assistant',
         timestamp: new Date()
-      }
-      setMessages(prev => [...prev, assistantMessage])
-
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+  
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
         description: "Não foi possível processar sua mensagem: " + error,
-      })
+      });
     } finally {
-      setIsTyping(false)
+      setIsTyping(false);
     }
-  }
+  };
+  
 
   if (loading) {
     return (
