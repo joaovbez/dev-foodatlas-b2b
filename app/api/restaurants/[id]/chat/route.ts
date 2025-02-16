@@ -6,14 +6,34 @@ import { prisma } from "@/lib/prisma";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import Papa from "papaparse";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 /**
  * Função para extrair texto de um arquivo .txt.
  */
-async function extractTextFromFile(filePath: string): Promise<string> {  
-  return fs.readFileSync(filePath, "utf-8");
+async function extractTextFromFile(filePath: string, ext: string): Promise<string> {
+  console.log("entrei na função")
+  if (ext === ".pdf") {
+    const { default: pdfParse } = await import("pdf-parse"); // lazy import
+    const dataBuffer = fs.readFileSync(filePath);
+    const data = await pdfParse(dataBuffer);
+    return data.text;
+  } else if (ext === ".csv") {
+    console.log("passei pelo step1")
+    const csvText = fs.readFileSync(filePath, "utf-8");
+    console.log("passei pelo step2")
+    // Se o CSV possuir cabeçalho, o option header: true organiza os dados em objetos
+    const parsed = Papa.parse(csvText, { header: true });
+    console.log("passei pelo step3")
+    // Formata os dados em JSON indentado para melhor legibilidade
+    return JSON.stringify(parsed.data, null, 2);    
+  } else if (ext === ".txt") {
+    return fs.readFileSync(filePath, "utf-8");
+  } else {
+    return "";
+  }
 }
 
 /**
@@ -30,7 +50,7 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 /**
  * Função para dividir um texto em chunks menores com overlap.
  */
-function splitTextIntoChunks(text: string, maxChunkSize = 1000, overlap = 200): string[] {
+function splitTextIntoChunks(text: string, maxChunkSize = 10000, overlap = 2000): string[] {
   const chunks: string[] = [];
   let start = 0;
   while (start < text.length) {
@@ -68,7 +88,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       const tempFilePath = path.join(os.tmpdir(), file.name);
       await blob.download({ destination: tempFilePath });
       
-      const text = await extractTextFromFile(tempFilePath);
+      
+      const ext = path.extname(file.name).toLowerCase();
+      console.log(ext)
+      const text = await extractTextFromFile(tempFilePath, ext);
+      console.log(text)
       if (text) {
         extractedTexts.push({ fileName: file.name, text });
       }
@@ -85,7 +109,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     // 4. Dividir os textos extraídos em chunks, gerar embeddings para cada chunk e calcular similaridade
     const allChunks: { chunk: string; embedding: number[] }[] = [];
     for (const { fileName, text } of extractedTexts) {
-      const chunks = splitTextIntoChunks(text, 1000, 200);
+      const chunks = splitTextIntoChunks(text, 10000, 2000);
       for (const chunk of chunks) {
         const chunkEmbeddingResponse = await openai.embeddings.create({
           model: "text-embedding-ada-002",
@@ -105,8 +129,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     // Selecionar os top 3 chunks com maior similaridade
     chunkSimilarities.sort((a, b) => b.similarity - a.similarity);
     const topChunks = chunkSimilarities.slice(0, 3);
-    const contextText = topChunks.map(item => item.chunk).join("\n\n");
-
+    const contextText = topChunks.map(item => item.chunk).join("\n\n");   
+    console.log("CHUNKS ABAIXO")
+    console.log(topChunks)        
     // 5. Preparar o prompt com o contexto reduzido
     const prompt = `Você é um analista de dados especializado em restaurantes. Utilize as informações a seguir extraídas dos documentos do restaurante para responder à pergunta com insights precisos e recomendações práticas.
 
@@ -115,11 +140,7 @@ ${contextText}
 
 Pergunta: ${question}
 
-Responda de forma detalhada, com base exclusivamente nas informações fornecidas.
-Caso ache que não tenha informações suficientes, diga: Infelizmente, você ainda não forneceu dados destes recursos para darmos uma boa resposta para você.
-Em seguida, de forma direta, recomende possíveis ações para que possamos responder melhor da próxima vez:
-1 - Anexar arquivos que contenham estes dados
-2 - Completar integrações de CRM/PDV, etc. na nossa plataforma`;
+Responda com base nas informações fornecidas. Seja direto e conciso.`;
 
     // 6. Enviar o prompt para o GPT-4o e obter a resposta
     const completionResponse = await openai.chat.completions.create({
@@ -128,7 +149,7 @@ Em seguida, de forma direta, recomende possíveis ações para que possamos resp
         { role: "system", content: "Você é um analista de dados experiente." },
         { role: "user", content: prompt },
       ],
-      temperature: 0.7,
+      temperature: 0.1,
     });
     const answer = completionResponse.choices[0].message.content;
 
