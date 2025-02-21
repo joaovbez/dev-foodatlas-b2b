@@ -84,7 +84,7 @@ export function LoginForm({
   return (
     <form onSubmit={onSubmit} className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold text-gray-700">Seja bem vindo de volta!</h1>
+        <h1 className="text-2xl font-bold text-white">Seja bem vindo!</h1>
         <p className="text-balance text-sm text-muted-foreground">
           Faça login em sua conta.
         </p>
@@ -93,7 +93,7 @@ export function LoginForm({
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
-          <Input name="email" id="email" type="email" placeholder="m@example.com" required />
+          <Input name="email" id="email" type="email" placeholder="nome@email.com" required />
         </div>
         <div className="grid gap-2">
           <div className="flex items-center">

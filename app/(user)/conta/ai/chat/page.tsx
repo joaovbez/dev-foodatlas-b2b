@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from "react"
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
+import { BarChartMock } from "@/components/barcharmock";
+
+
 interface Restaurant {
   id: string
   name: string
@@ -24,13 +27,16 @@ interface Restaurant {
 }
 
 interface Message {
-  id: string
-  content: string
-  role: 'assistant' | 'user'
-  timestamp: Date
+  id: string;
+  content: string;
+  role: 'assistant' | 'user';
+  timestamp: Date;
+  chart?: boolean; // se true, exibir gráfico
 }
 
+
 export default function AIChatPage() {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
@@ -72,6 +78,12 @@ export default function AIChatPage() {
   ]
 
   useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  useEffect(() => {
     async function loadRestaurants() {
       try {
         const response = await fetch('/api/restaurants')
@@ -100,13 +112,67 @@ export default function AIChatPage() {
     loadRestaurants()
   }, [toast])
 
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    async function initChat() {
+      if (!selectedRestaurant || initialized) return;
+      try {
+        const response = await fetch(`/api/restaurants/${selectedRestaurant}/chat/init`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await response.json();
+        console.log("Chat inicializado:", data);
+        setInitialized(true);
+      } catch (error) {
+        console.error("Erro na inicialização do chat:", error);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível inicializar o chat.",
+        });
+      }
+    }
+    initChat();
+  }, [selectedRestaurant, initialized]);
+
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !selectedRestaurant) return;
+    
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes("gráfico") || lowerMessage.includes("chart")) {
+      // 1. Cria mensagem do usuário normalmente
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: message,
+        role: "user",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setMessage("");
   
+      // 2. Em vez de chamar a LLM, adicionamos uma mensagem do assistente com `chart: true`
+      setIsTyping(true)
+      setTimeout(() => {
+        setIsTyping(false)
+        const chartMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: "", // Sem texto, pois exibiremos o gráfico
+          role: "assistant",
+          timestamp: new Date(),
+          chart: true,
+        }
+        setMessages((prev) => [...prev, chartMessage])
+      }, 7000)
+      return; // sai daqui e não chama a LLM
+    }
+    
     setIsTyping(true);
     try {
-      // Adiciona mensagem do usuário
+      // 1. Mensagem do usuário
       const userMessage: Message = {
         id: Date.now().toString(),
         content: message,
@@ -116,31 +182,92 @@ export default function AIChatPage() {
       setMessages(prev => [...prev, userMessage]);
       setMessage('');
   
-      // Chama o novo endpoint de chat passando a pergunta como "question"
+      // 2. Chama o endpoint de chat (que retorna stream)
       const response = await fetch(`/api/restaurants/${selectedRestaurant}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: message }),
+        body: JSON.stringify({ question: userMessage.content }),
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Erro do backend:", errorData);
+        // Se o status não for 2xx, podemos tentar ler o erro
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { error: "Falha ao processar mensagem (stream)" };
+        }
         throw new Error(errorData.error || 'Falha ao processar mensagem');
       }
   
-      const data = await response.json();
+      // 3. Lê o corpo como stream (em vez de `response.json()`)
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Não foi possível ler o stream do servidor.");
+      }
   
-      // Adiciona a resposta do assistente, utilizando a propriedade "answer" retornada pelo backend
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: data.answer,
-        role: 'assistant',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, assistantMessage]);
+      const decoder = new TextDecoder("utf-8");
+      let done = false;
+      let finalText = "";
+  
+      // 4. Criamos uma mensagem "em construção" para o assistente,
+      //    caso queiramos exibir os tokens conforme chegam.
+      let partialAssistantMsgId = "assistant-stream";
+      setMessages(prev => [
+        ...prev,
+        {
+          id: partialAssistantMsgId,
+          content: "",
+          role: "assistant",
+          timestamp: new Date()
+        }
+      ]);
+  
+      // 5. Loop que lê cada chunk
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          // Decodifica chunk
+          const chunkValue = decoder.decode(value);
+  
+          // Concatena no finalText (para ter a resposta completa)
+          finalText += chunkValue;
+  
+          // Atualiza a mensagem do assistente com o texto parcial
+          setMessages(prev => {
+            // Copiamos o array de mensagens
+            const updated = [...prev];
+            // Localiza a "mensagem em construção"
+            const assistantIndex = updated.findIndex(m => m.id === partialAssistantMsgId);
+            if (assistantIndex !== -1) {
+              updated[assistantIndex] = {
+                ...updated[assistantIndex],
+                content: updated[assistantIndex].content + chunkValue,
+              };
+            }
+            return updated;
+          });
+        }
+      }
+  
+      // 6. Quando termina, finalText contém a resposta completa.
+      //    Podemos atualizar a mensagem "final" e remover a temporária se quiser.
+      setMessages(prev => {
+        // Remove a mensagem parcial
+        const updated = prev.filter(m => m.id !== partialAssistantMsgId);
+        // Cria mensagem final
+        updated.push({
+          id: (Date.now() + 1).toString(),
+          content: finalText,
+          role: "assistant",
+          timestamp: new Date()
+        });
+        return updated;
+      });
   
     } catch (error) {
+      console.error("Erro no streaming:", error);
       toast({
         variant: "destructive",
         title: "Erro",
@@ -150,6 +277,7 @@ export default function AIChatPage() {
       setIsTyping(false);
     }
   };
+  
   
 
   if (loading) {
@@ -316,28 +444,46 @@ export default function AIChatPage() {
 
           <Card className="flex-1 mb-4 border-primary/20 relative overflow-hidden">
             <ScrollArea className="h-full">
-              <div className="flex flex-col gap-4 p-4">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                    {msg.role === 'assistant' && (
+              <div ref={scrollRef} className="flex flex-col gap-4 p-4">
+              {messages.map((msg) => {
+                const isAssistant = msg.role === 'assistant';
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}
+                  >
+                    {isAssistant && (
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <Bot className="w-5 h-5 text-primary" />
                       </div>
                     )}
-                    <div className={`rounded-lg p-3 max-w-[80%] ${
-                      msg.role === 'assistant' 
-                        ? 'bg-muted/50' 
-                        : 'bg-primary text-primary-foreground'
-                    }`}>
-                      <p className="text-sm">{msg.content}</p>
+                    <div
+                      className={`rounded-lg p-3 max-w-[80%] ${
+                        isAssistant
+                          ? "bg-muted/50"
+                          : "bg-primary text-primary-foreground"
+                      }`}
+                    >
+                      {msg.chart ? (
+                        // Se chart=true, exibe o gráfico
+                        <div className="text-sm">
+                          {/* Importe seu BarChartMock e renderize aqui */}
+                          <BarChartMock />
+                        </div>
+                      ) : (
+                        // Caso contrário, exibe o texto normal
+                        <p className="text-sm">{msg.content}</p>
+                      )}
                     </div>
-                    {msg.role === 'user' && (
+                    {msg.role === "user" && (
                       <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                         <span className="text-xs text-primary-foreground">EU</span>
                       </div>
                     )}
                   </div>
-                ))}
+                );
+              })}
+
 
                 {isTyping && (
                   <div className="flex gap-3">

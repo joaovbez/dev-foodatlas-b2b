@@ -8,14 +8,13 @@ export default function LoginPage() {
       
       <div className="flex flex-1 flex-col items-center gap-4 justify-center">        
         
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-black text-primary-foreground">
           <img
-           src={logo_1.src}
+            src={logo_1.src}
             alt="Custom Icon"
             className="h-14 w-14"
-           />
-
-        </div>                                    
+          />
+        </div>                                  
         <div className="w-full max-w-xs">
           <SignUpForm />
         </div>      

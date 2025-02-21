@@ -20,7 +20,7 @@ export function ForgotPasswordForm({
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+          <Input id="email" type="email" placeholder="nome@email.com" required />
         </div>        
         <Button type="submit" className="w-full" asChild>
           <Link href="#">Enviar link de recuperação</Link>
