@@ -75,11 +75,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     for (const { text } of extractedTexts) {
       console.log("debugacao");
       var i = 0;
-      const chunks = splitTextIntoChunks(text, 12000, 1000);
+      const chunks = splitTextIntoChunks(text, 18000, 0);
       for (const chunk of chunks) {
         console.log(i)
         const chunkEmbeddingResponse = await openai.embeddings.create({
-          model: "text-embedding-ada-002",
+          model: "text-embedding-3-small",
           input: chunk,
         });
         const embedding = chunkEmbeddingResponse.data[0].embedding;

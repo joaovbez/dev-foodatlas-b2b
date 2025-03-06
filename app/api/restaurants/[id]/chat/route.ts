@@ -44,22 +44,38 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }));
     // Selecionar os top 3 chunks com maior similaridade
     chunkSimilarities.sort((a, b) => b.similarity - a.similarity);
-    const topChunks = chunkSimilarities.slice(0, 3);
+    const topChunks = chunkSimilarities.slice(0, 7);
     const contextText = topChunks.map(item => item.chunk).join("\n\n");
 
     // Compor o prompt final
-    const prompt = `Você é um analista de dados especializado em restaurantes. Utilize as informações a seguir para responder à pergunta com insights precisos e recomendações práticas.
+    const prompt = `Você é um analista de dados especializado em restaurantes. Utilize as informações a seguir para 
+                    responder à pergunta com insights precisos e recomendações práticas.
 
-Informações relevantes:
-${contextText}
+                    Informações relevantes:
+                    ${contextText}
 
-Pergunta: ${question}
+                    Pergunta: ${question}
 
-Responda de forma direta a resposta para a pergunta, com base exclusivamente nos dados anexados (falar isso). Não citar números caso sejam baixos.`;
+                    Responda a pergunta com base nos dados fornecidos. Realize cálculos e enfatize os períodos (datas), mas sem mostrar, e retorne números relevantes para fortalecer os insight.
+                    e pontos importantes. Apesar da resposta bem embasada e com justificativa correta (clara e conscisa), ela não pode ser
+                    muito longa, sempre que possível seja direto ao ponto.
+                    
+                    Use como base esse exemplo de pergunta e resposta (inclusive a formatação MarkDown, deixei os títúlos em fonte maior na resposta): 
+                    Qual produto poderia ser retirado do cardápio por baixo desempenho?
+                    
+                    ## Análise
+                    ### Analisando os pedidos de *02/06/2025 até o momento*, a *Lasanha* poderia ser retirada do cardápio por baixo desempenho.
+                    - A Lasanha foi vendida apenas 14 vezes, enquanto os demais produtos apresentaram uma média de cerca de 30 vendas.
+                    - Além disso, geralmente ela não é acompanhada de bebidas ou outros itens em 65% dos pedidos, atraindo menos receita.
+
+                    ## Solução Alternativa
+                    Uma solução viável poderia ser a criação de promoções de combos com este produto e outros itens.
+                 
+`;
 
     // Iniciar a chamada com streaming, passando stream: true
     const streamResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "Você é um analista de dados experiente." },
         { role: "user", content: prompt },

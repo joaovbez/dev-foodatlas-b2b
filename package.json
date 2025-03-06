@@ -7,10 +7,13 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "vercel-build": "prisma generate && next build"
+    "vercel-build": "prisma generate && next build",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
+    "@google-cloud/aiplatform": "^3.34.0",
+    "@google-cloud/bigquery": "^7.9.2",
     "@google-cloud/storage": "^7.15.0",
     "@hookform/resolvers": "^3.10.0",
     "@langchain/community": "^0.3.31",
@@ -45,12 +48,15 @@
     "next-themes": "^0.4.4",
     "openai": "^4.85.1",
     "papaparse": "^5.5.2",
+    "patch-package": "^8.0.0",
     "pdf-parse": "^1.1.1",
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.54.2",
     "react-imask": "^7.6.1",
+    "react-markdown": "^10.0.0",
     "recharts": "^2.15.1",
+    "remark-gfm": "^4.0.1",
     "resend": "^4.1.1",
     "sonner": "^1.7.2",
     "sonnet": "^0.0.1",
@@ -72,6 +78,7 @@
     "postcss": "^8",
     "prisma": "^6.2.1",
     "tailwindcss": "^3.4.1",
-    "typescript": "5.7.3"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
   }
 }

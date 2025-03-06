@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { useEffect, useState, useRef } from "react"
 import { Button } from '@/components/ui/button'
@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
-import { BarChartMock } from "@/components/barcharmock";
-
+import { BarChartMock } from "@/components/barcharmock"
+import ReactMarkdown from 'react-markdown'
 
 interface Restaurant {
   id: string
@@ -34,9 +34,9 @@ interface Message {
   chart?: boolean; // se true, exibir gráfico
 }
 
-
 export default function AIChatPage() {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)  // ref para o elemento dummy no final do chat
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
@@ -47,7 +47,7 @@ export default function AIChatPage() {
     id: '1',
     content: 'Olá! Sou seu assistente de IA especializado em análise de dados. Como posso ajudar você a entender melhor o desempenho do seu restaurante hoje?',
     role: 'assistant',
-    timestamp: new Date()
+    timestamp: new Date() 
   }])
 
   const suggestions = [
@@ -77,10 +77,9 @@ export default function AIChatPage() {
     }
   ]
 
+  // Auto-scroll: sempre que messages mudar, o elemento dummy (bottomRef) é rolado para a vista
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
@@ -135,16 +134,15 @@ export default function AIChatPage() {
       }
     }
     initChat();
-  }, [selectedRestaurant, initialized]);
+  }, [selectedRestaurant, initialized, toast]);
 
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !selectedRestaurant) return;
     
     const lowerMessage = message.toLowerCase();
     if (lowerMessage.includes("gráfico") || lowerMessage.includes("chart")) {
-      // 1. Cria mensagem do usuário normalmente
+      // 1. Cria mensagem do usuário
       const userMessage: Message = {
         id: Date.now().toString(),
         content: message,
@@ -154,25 +152,25 @@ export default function AIChatPage() {
       setMessages((prev) => [...prev, userMessage]);
       setMessage("");
   
-      // 2. Em vez de chamar a LLM, adicionamos uma mensagem do assistente com `chart: true`
-      setIsTyping(true)
+      // 2. Ativa animação de digitação e, após 3 segundos, exibe o gráfico mock
+      setIsTyping(true);
       setTimeout(() => {
-        setIsTyping(false)
+        setIsTyping(false);
         const chartMessage: Message = {
           id: (Date.now() + 1).toString(),
-          content: "", // Sem texto, pois exibiremos o gráfico
+          content: "",
           role: "assistant",
           timestamp: new Date(),
           chart: true,
         }
-        setMessages((prev) => [...prev, chartMessage])
-      }, 7000)
-      return; // sai daqui e não chama a LLM
+        setMessages((prev) => [...prev, chartMessage]);
+      }, 3000);
+      return;
     }
     
     setIsTyping(true);
     try {
-      // 1. Mensagem do usuário
+      // Mensagem do usuário
       const userMessage: Message = {
         id: Date.now().toString(),
         content: message,
@@ -182,7 +180,7 @@ export default function AIChatPage() {
       setMessages(prev => [...prev, userMessage]);
       setMessage('');
   
-      // 2. Chama o endpoint de chat (que retorna stream)
+      // Chama o endpoint de chat (que retorna stream)
       const response = await fetch(`/api/restaurants/${selectedRestaurant}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -190,7 +188,6 @@ export default function AIChatPage() {
       });
       
       if (!response.ok) {
-        // Se o status não for 2xx, podemos tentar ler o erro
         let errorData;
         try {
           errorData = await response.json();
@@ -200,7 +197,6 @@ export default function AIChatPage() {
         throw new Error(errorData.error || 'Falha ao processar mensagem');
       }
   
-      // 3. Lê o corpo como stream (em vez de `response.json()`)
       const reader = response.body?.getReader();
       if (!reader) {
         throw new Error("Não foi possível ler o stream do servidor.");
@@ -209,10 +205,7 @@ export default function AIChatPage() {
       const decoder = new TextDecoder("utf-8");
       let done = false;
       let finalText = "";
-  
-      // 4. Criamos uma mensagem "em construção" para o assistente,
-      //    caso queiramos exibir os tokens conforme chegam.
-      let partialAssistantMsgId = "assistant-stream";
+      const partialAssistantMsgId = "assistant-stream";
       setMessages(prev => [
         ...prev,
         {
@@ -223,40 +216,28 @@ export default function AIChatPage() {
         }
       ]);
   
-      // 5. Loop que lê cada chunk
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         if (value) {
-          // Decodifica chunk
           const chunkValue = decoder.decode(value);
-  
-          // Concatena no finalText (para ter a resposta completa)
           finalText += chunkValue;
-  
-          // Atualiza a mensagem do assistente com o texto parcial
           setMessages(prev => {
-            // Copiamos o array de mensagens
-            const updated = [...prev];
-            // Localiza a "mensagem em construção"
-            const assistantIndex = updated.findIndex(m => m.id === partialAssistantMsgId);
-            if (assistantIndex !== -1) {
-              updated[assistantIndex] = {
-                ...updated[assistantIndex],
-                content: updated[assistantIndex].content + chunkValue,
-              };
+            const updated = [...prev]; 
+            const index = updated.findIndex((m) => m.id === partialAssistantMsgId);
+            if (index !== -1) {
+              updated[index] = {
+                ...updated[index],
+                content: updated[index].content + chunkValue,
+              }
             }
             return updated;
           });
         }
       }
   
-      // 6. Quando termina, finalText contém a resposta completa.
-      //    Podemos atualizar a mensagem "final" e remover a temporária se quiser.
       setMessages(prev => {
-        // Remove a mensagem parcial
-        const updated = prev.filter(m => m.id !== partialAssistantMsgId);
-        // Cria mensagem final
+        const updated = prev.filter((m) => m.id !== partialAssistantMsgId);
         updated.push({
           id: (Date.now() + 1).toString(),
           content: finalText,
@@ -277,8 +258,6 @@ export default function AIChatPage() {
       setIsTyping(false);
     }
   };
-  
-  
 
   if (loading) {
     return (
@@ -300,10 +279,7 @@ export default function AIChatPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             Você precisa cadastrar um restaurante para usar o chat de IA
           </p>
-          <Button
-            onClick={() => window.location.href = '/conta/restaurants/add'}
-            className="mt-4"
-          >
+          <Button onClick={() => (window.location.href = '/conta/restaurants/add')} className="mt-4">
             Adicionar Restaurante
           </Button>
         </div>
@@ -311,7 +287,6 @@ export default function AIChatPage() {
     )
   }
 
-  // Componente do seletor de restaurante para reutilização
   function RestaurantSelector({
     value,
     onValueChange,
@@ -352,9 +327,7 @@ export default function AIChatPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Store className="w-4 h-4 text-primary" />
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Restaurante Selecionado
-                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">Restaurante Selecionado</p>
                 </div>
                 <RestaurantSelector
                   value={selectedRestaurant}
@@ -368,9 +341,7 @@ export default function AIChatPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Bot className="w-4 h-4 text-primary" />
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Sugestões de Perguntas
-                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">Sugestões de Perguntas</p>
                 </div>
                 <ScrollArea className="h-[calc(100vh-16rem)]">
                   <div className="space-y-4 pr-4">
@@ -445,46 +416,49 @@ export default function AIChatPage() {
           <Card className="flex-1 mb-4 border-primary/20 relative overflow-hidden">
             <ScrollArea className="h-full">
               <div ref={scrollRef} className="flex flex-col gap-4 p-4">
-              {messages.map((msg) => {
-                const isAssistant = msg.role === 'assistant';
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}
-                  >
-                    {isAssistant && (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Bot className="w-5 h-5 text-primary" />
-                      </div>
-                    )}
+                {messages.map((msg) => {
+                  const isAssistant = msg.role === "assistant";
+                  return (
                     <div
-                      className={`rounded-lg p-3 max-w-[80%] ${
-                        isAssistant
-                          ? "bg-muted/50"
-                          : "bg-primary text-primary-foreground"
-                      }`}
+                      key={msg.id}
+                      className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}
                     >
-                      {msg.chart ? (
-                        // Se chart=true, exibe o gráfico
-                        <div className="text-sm">
-                          {/* Importe seu BarChartMock e renderize aqui */}
-                          <BarChartMock />
+                      {isAssistant && (
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Bot className="w-5 h-5 text-primary" />
                         </div>
-                      ) : (
-                        // Caso contrário, exibe o texto normal
-                        <p className="text-sm">{msg.content}</p>
+                      )}
+                      <div
+                        className={`rounded-lg p-3 max-w-[80%] ${
+                          isAssistant
+                            ? "bg-muted/50"
+                            : "bg-primary text-primary-foreground"
+                        }`}
+                      >
+                        {msg.chart ? (
+                          <div className="text-sm">
+                            <BarChartMock />
+                          </div>
+                        ) : (
+                          <ReactMarkdown
+                          components={{
+                            h1: ({ node, ...props }) => <h1 className="text-2xl font-bold my-2" {...props} />,
+                            h2: ({ node, ...props }) => <h2 className="text-xl font-semibold my-2" {...props} />,
+                            h3: ({ node, ...props }) => <h3 className="text-lg font-semibold my-2" {...props} />,
+                            ul: ({ node, ...props }) => <ul className="list-disc list-inside my-2" {...props} />,
+                            li: ({ node, ...props }) => <li className="ml-4 mb-1" {...props} />,                            
+                          }}
+                          >{msg.content}</ReactMarkdown>
+                        )}
+                      </div>
+                      {msg.role === "user" && (
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                          <span className="text-xs text-primary-foreground">EU</span>
+                        </div>
                       )}
                     </div>
-                    {msg.role === "user" && (
-                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                        <span className="text-xs text-primary-foreground">EU</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-
+                  );
+                })}
                 {isTyping && (
                   <div className="flex gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -497,6 +471,8 @@ export default function AIChatPage() {
                     </div>
                   </div>
                 )}
+                {/* Elemento dummy para auto-scroll */}
+                <div ref={bottomRef} />
               </div>
             </ScrollArea>
           </Card>
@@ -509,11 +485,7 @@ export default function AIChatPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 className="flex-1"
               />
-              <Button 
-                type="submit" 
-                disabled={!message.trim()} 
-                className="bg-primary hover:bg-primary/90"
-              >
+              <Button type="submit" disabled={!message.trim()} className="bg-primary hover:bg-primary/90">
                 <Send className="w-4 h-4" />
               </Button>
             </form>

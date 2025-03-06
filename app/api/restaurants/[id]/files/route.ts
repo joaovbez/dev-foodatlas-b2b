@@ -1,11 +1,56 @@
-import { NextRequest, NextResponse } from "next/server"
-import { bucket } from "@/lib/google-cloud-storage"
-import { prisma } from "@/lib/prisma"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth-options"
-import { v4 as uuidv4 } from 'uuid'
+import { NextRequest, NextResponse } from "next/server";
+import { bucket } from "@/lib/google-cloud-storage";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-options";
+import { v4 as uuidv4 } from 'uuid';
+import Papa from "papaparse"; 
+import path from "path";
+import { generateEmbedding } from "@/lib/services/generate-embeddings";
+import { saveEmbedding } from "@/lib/services/big-query";
 
-const STORAGE_LIMIT_MB = 100 // 100MB em megabytes
+const STORAGE_LIMIT_MB = 100 
+
+async function extractTextFromFile(file: File, ext: string): Promise<string> {
+
+  if (ext === ".pdf") {
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { default: pdfParse } = await import("pdf-parse");    
+    const pdfData = await pdfParse(buffer);    
+    
+    return pdfData.text;
+
+  } else if (ext === ".csv") {
+    const csvText = await file.text();
+    const parsed = Papa.parse(csvText, { header: true });
+
+    return JSON.stringify(parsed.data, null, 2);
+  
+  } else if (ext === ".txt") {    
+    return await file.text();
+
+  } else {
+    return "";
+  }
+}
+async function processAndIndexFile(file: File, ext: string, restaurantId: string, fileId: string) {
+  
+  const text = await extractTextFromFile(file, ext);
+  
+  const embedding = await generateEmbedding(text);
+  
+  const data = {    
+    fileId: fileId,
+    restaurantId: restaurantId, 
+    text: text,
+    embedding: embedding,
+  };
+
+  await saveEmbedding(data);
+  console.log("Arquivo processado e indexado com sucesso")
+}
 
 export async function GET(
   req: NextRequest,
@@ -137,7 +182,6 @@ export async function POST(
 
       blobStream.on('finish', async () => {
         try {
-          // Não precisa mais chamar makePublic() pois o bucket já está público
           const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`
 
           const fileRecord = await prisma.restaurantFile.create({
@@ -149,8 +193,12 @@ export async function POST(
               restaurantId: restaurant.id,
             },
           })
+          
+          resolve(NextResponse.json(fileRecord));                  
+                  
+          const ext = path.extname(file.name).toLowerCase();
+          processAndIndexFile(file, ext, restaurant.id ,fileRecord.id);
 
-          resolve(NextResponse.json(fileRecord))
         } catch (error) {
           console.error("Erro ao salvar arquivo:", error)
           try {

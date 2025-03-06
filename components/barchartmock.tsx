@@ -20,7 +20,7 @@ import {
 
 const chartData = [
   { month: "Janeiro", vendas: 323 },
-  { month: "Fevereiro", vendas: 274 },
+  { month: "Fevereiro", vendas: 295 },
   { month: "Março", vendas: 283 },
   { month: "Abril", vendas: 353 },
   { month: "Maio", vendas: 401 },
@@ -39,7 +39,7 @@ export function BarChartMock() {
     <Card>
       <CardHeader>
         <CardTitle>Quantidade de Vendas Mensal</CardTitle>
-        <CardDescription>Janeiro - Junho 2025</CardDescription>
+        <CardDescription>Janeiro - Junho</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
