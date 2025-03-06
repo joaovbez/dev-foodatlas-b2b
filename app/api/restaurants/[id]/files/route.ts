@@ -16,10 +16,8 @@ async function extractTextFromFile(file: File, ext: string): Promise<string> {
   if (ext === ".pdf") {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-
     const { default: pdfParse } = await import("pdf-parse");    
     const pdfData = await pdfParse(buffer);    
-    
     return pdfData.text;
 
   } else if (ext === ".csv") {

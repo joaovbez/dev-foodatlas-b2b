@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
-import { BarChartMock } from "@/components/barcharmock"
+import { BarChartMock } from "@/components/barchartmock"
 import ReactMarkdown from 'react-markdown'
 
 interface Restaurant {
