@@ -5,17 +5,8 @@ const bigquery = new BigQuery({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
 
-export async function saveEmbedding({
-  fileId,
-  restaurantId,
-  text,
-  embedding,
-}: {
-  fileId: string;
-  restaurantId: string;
-  text: string;
-  embedding: number[];
-}): Promise<void>{
+export async function saveEmbedding(fileId: string, restaurantId: string, 
+                                    text: string, embedding: number[]): Promise<void>{
 
   const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
   const datasetId = process.env.GOOGLE_DATASET_EMBEDDINGS;
@@ -57,9 +48,7 @@ export async function saveEmbedding({
   };
 
   try {
-    console.log("ARMAZENAMENTO DO EMBEDDING INICIADO...");
     await table.insert(row);
-    console.log("ARMAZENAMENTO DO EMBEDDING FINALIZADO");
   } catch (err) {
     console.error("Erro ao inserir linha no BigQuery:", err);
     throw err;
