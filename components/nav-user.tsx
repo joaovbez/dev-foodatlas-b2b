@@ -48,6 +48,7 @@ export function NavUser({ user, children }: NavUserProps) {
 
   const handleSignOut = async () => {
     try {
+      localStorage.removeItem("rememberedCredentials")
       await signOut({
         redirect: true,
         callbackUrl: "/login"

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -21,6 +21,27 @@ export function LoginForm({
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem("rememberedCredentials")
+    if (savedCredentials) {
+      const { email, password } = JSON.parse(savedCredentials)
+      setEmail(email)
+      setPassword(password)
+      setRememberMe(true)
+    }
+  }, [])
+
+  const handleRememberMeChange = (checked: boolean) => {
+    setRememberMe(checked)
+    if (!checked) {
+      localStorage.removeItem("rememberedCredentials")
+      setEmail("")
+      setPassword("")
+    }
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -64,6 +85,10 @@ export function LoginForm({
       }
 
       if (result?.ok) {
+        if (rememberMe) {
+          localStorage.setItem("rememberedCredentials", JSON.stringify({ email, password }))
+        }
+
         toast({
           title: "Login realizado com sucesso!",
           description: "Redirecionando para sua conta...",
@@ -96,7 +121,15 @@ export function LoginForm({
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
-          <Input name="email" id="email" type="email" placeholder="nome@email.com" required />
+          <Input 
+            name="email" 
+            id="email" 
+            type="email" 
+            placeholder="nome@email.com" 
+            required 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <div className="grid gap-2">
           <div className="flex items-center">
@@ -115,6 +148,8 @@ export function LoginForm({
               type={showPassword ? "text" : "password"} 
               placeholder="••••••••" 
               required 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <Button
               type="button"
@@ -134,7 +169,7 @@ export function LoginForm({
             <Checkbox 
               id="remember" 
               checked={rememberMe}
-              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              onCheckedChange={(checked) => handleRememberMeChange(checked as boolean)}
             />
             <Label 
               htmlFor="remember" 
