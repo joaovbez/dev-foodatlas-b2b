@@ -6,7 +6,9 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request })
   const isAuthPage = request.nextUrl.pathname.startsWith("/login") || 
                      request.nextUrl.pathname.startsWith("/sign-up") ||
-                     request.nextUrl.pathname.startsWith("/verify-email")
+                     request.nextUrl.pathname.startsWith("/verify-email") ||
+                     request.nextUrl.pathname.startsWith("/forgot-password") ||
+                     request.nextUrl.pathname.startsWith("/reset-password")
 
   if (isAuthPage) {
     if (token) {
