@@ -27,8 +27,6 @@ const splitToSentencesUsingNLP = (textCorpus: string): string[] => {
   const normalizedText = textCorpus.replace(/\r\n/g, "\n");
   const sentences = tokenizer.tokenize(normalizedText);  
 
-  console.log(sentences);
-  console.log(sentences.length);
   return sentences;
 };
 
@@ -208,15 +206,6 @@ export async function processTextFile(filepath: string){
       updatedArray,
       significantShiftIndices
     );
-
-    // console.log(`Total Chunks Processed : ${semanticChunks.length}`);
-    
-    // console.log("Semantic Chunks:\n");
-    // semanticChunks.forEach((chunk, index) => {
-    //   console.log(`Chunk #${index + 1}:`);
-    //   console.log(chunk);
-    //   console.log("\n--------------------------------------------------\n");
-    // });
 
     return semanticChunks;
 
