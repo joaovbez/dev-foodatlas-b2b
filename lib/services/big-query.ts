@@ -54,3 +54,54 @@ export async function saveEmbedding(fileId: string, restaurantId: string,
     throw err;
   }
 }
+
+interface EmbeddingResult {
+  fileId: string;
+  restaurantId: string;
+  text: string;
+  distance: number;
+}
+
+export async function vector_search(embedding_input: number[], topK: number, restaurantId: string) :Promise<EmbeddingResult[]>{
+  
+  const vectorString = JSON.stringify(embedding_input);
+
+  const query = `
+  SELECT 
+    base.fileId, 
+    base.restaurantId, 
+    base.text, 
+    distance
+  FROM VECTOR_SEARCH(
+    TABLE \`foodatlas-442513.b2b_embeddings.embeddings\`,
+    'embedding',
+    (
+      SELECT * FROM UNNEST([
+        STRUCT(
+          "query_id" AS query_id,
+          ${vectorString} AS embedding
+        )
+      ])
+    ),
+    'embedding',
+    top_k => ${topK},
+    distance_type => "COSINE"
+  )
+  WHERE base.restaurantId = '${restaurantId}'
+  ORDER BY distance ASC
+  `;
+    
+  try{
+    const [rows] = await bigquery.query(query);
+    
+    return rows.map((row: any) => ({
+      fileId: row.fileId,
+      restaurantId: row.restaurantId,
+      text: row.text,
+      distance: row.distance,
+    }));
+  } catch(error)  {
+    console.error("Erro ao executar consulta de Vector Search:", error);
+    throw error;
+  }
+}

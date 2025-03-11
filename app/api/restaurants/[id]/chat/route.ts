@@ -1,17 +1,7 @@
 // /app/api/restaurants/[id]/chat/route.ts
 import { NextResponse } from "next/server";
-import { OpenAI } from "openai";
-import { preprocessedCache } from "./init/route"; // Certifique-se de que esse caminho esteja correto
-// Função de similaridade (igual ao código atual)
-function cosineSimilarity(vecA: number[], vecB: number[]): number {
-  const dotProduct = vecA.reduce((acc, val, idx) => acc + val * vecB[idx], 0);
-  const normA = Math.sqrt(vecA.reduce((acc, val) => acc + val * val, 0));
-  const normB = Math.sqrt(vecB.reduce((acc, val) => acc + val * val, 0));
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (normA * normB);
-}
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { generateEmbedding, generateResponse } from "@/lib/services/generate-embeddings";
+import { vector_search } from "@/lib/services/big-query";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -21,76 +11,49 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
     const restaurantId = params.id;
 
-    // Verifica se os dados pré-processados estão no cache
-    console.log(preprocessedCache); 
-    const cachedData = preprocessedCache.get(restaurantId);   
+    const embedding_input = await generateEmbedding(question);
+
+    console.log("Começando Busca semantica");
+    const best_results = await vector_search(embedding_input, 5, restaurantId);
+    console.log('Busca semantica concluida');
+
+    const contextText = best_results.map((result) => result.text).join("\n\n");
     
-    if (!cachedData) {
-      return NextResponse.json({ error: "Contexto não pré-processado. Por favor, inicialize o chat." }, { status: 400 });
-    }
-    const { allChunks } = cachedData;
+    const prompt = `Você é um assistente que deve responder baseando-se exclusivamente no contexto e nas informações e dados fornecidos a seguir.
 
-    // Gerar embedding para a pergunta do usuário
-    const questionEmbeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-ada-002",
-      input: question,
-    });
-    const questionEmbedding = questionEmbeddingResponse.data[0].embedding;
+    ## A empresa tem como missão oferecer os melhores insights e recomendações para restaurantes cadastrados na plataforma, utilizando dados internos para embasar as respostas.
+    
+    ### O restaurante em questão forneceu os seguintes dados/relatórios:
+    
+    ${contextText}
 
-    // Calcular similaridade entre os chunks pré-processados e a embedding da pergunta
-    const chunkSimilarities = allChunks.map(item => ({
-      chunk: item.chunk,
-      similarity: cosineSimilarity(questionEmbedding, item.embedding),
-    }));
-    // Selecionar os top 3 chunks com maior similaridade
-    chunkSimilarities.sort((a, b) => b.similarity - a.similarity);
-    const topChunks = chunkSimilarities.slice(0, 7);
-    const contextText = topChunks.map(item => item.chunk).join("\n\n");
+    ## INSTRUÇÕES:
+    
+    - Se acima não houver tido nenhuma informação relevante, significa que o restaurante não forneceu dados suficientes para nossa base, logo, responda:
+        "Infelizmente ainda não temos informações suficientes sobre o seu restaurante para responder essa pergunta, 
+         verifique no gerenciamento dos arquivos se informações semelhantes foram cadastradas. Se achar conveniente, entre em contato com nosso suporte via WhatsApp".
 
-    // Compor o prompt final
-    const prompt = `Você é um analista de dados especializado em restaurantes. Utilize as informações a seguir para 
-                    responder à pergunta com insights precisos e recomendações práticas.
+    - Analise somente os chunks (dados/relatórios) que foram disponibilizados neste prompt para gerar a resposta. 
 
-                    Informações relevantes:
-                    ${contextText}
+    - Não invente ou “alucine” informações que não estejam contidas nesses textos.
 
-                    Pergunta: ${question}
+    - Se a pergunta do usuário não puder ser respondida usando exclusivamente esse material, responda: 
+        "Infelizmente ainda não temos informações suficientes sobre o seu restaurante para responder essa pergunta, 
+         verifique no gerenciamento dos arquivos se informações semelhantes foram cadastradas. Se achar conveniente, entre em contato com nosso suporte via WhatsApp".
 
-                    Responda a pergunta com base nos dados fornecidos. Realize cálculos e enfatize os períodos (datas), mas sem mostrar, e retorne números relevantes para fortalecer os insight.
-                    e pontos importantes. Apesar da resposta bem embasada e com justificativa correta (clara e conscisa), ela não pode ser
-                    muito longa, sempre que possível seja direto ao ponto.
-                    
-                    Use como base esse exemplo de pergunta e resposta (inclusive a formatação MarkDown, deixei os títúlos em fonte maior na resposta): 
-                    Qual produto poderia ser retirado do cardápio por baixo desempenho?
-                    
-                    ## Análise
-                    ### Analisando os pedidos de *02/06/2025 até o momento*, a *Lasanha* poderia ser retirada do cardápio por baixo desempenho.
-                    - A Lasanha foi vendida apenas 14 vezes, enquanto os demais produtos apresentaram uma média de cerca de 30 vendas.
-                    - Além disso, geralmente ela não é acompanhada de bebidas ou outros itens em 65% dos pedidos, atraindo menos receita.
+    - Se houver ambiguidade ou falta de clareza na solicitação do usuário, peça esclarecimentos antes de concluir a resposta.
 
-                    ## Solução Alternativa
-                    Uma solução viável poderia ser a criação de promoções de combos com este produto e outros itens.
-                 
-`;
+    - Foque em fornecer insights e recomendações que reflitam a missão da empresa de auxiliar o restaurante, analisando os dados que ele forneceu.
+    
+    ### Agora, tendo em mãos as informações do restaurante e o contexto da empresa, responda à seguinte pergunta:
+    "${question}"`;          
 
-    // Iniciar a chamada com streaming, passando stream: true
-    const streamResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "Você é um analista de dados experiente." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0,
-      stream: true,
-    });
+    const streamResponse = await generateResponse(prompt);
 
-    // Criar um ReadableStream para iterar sobre os chunks da resposta
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
-        // Supondo que streamResponse seja um async iterable de tokens/chunks
         for await (const chunk of streamResponse) {
-          // Cada chunk pode ter a estrutura: { choices: [ { delta: { content: string } } ] }
           const content = chunk.choices[0].delta?.content;
           if (content) {
             controller.enqueue(encoder.encode(content));

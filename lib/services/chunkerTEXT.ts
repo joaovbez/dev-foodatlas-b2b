@@ -1,6 +1,6 @@
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import natural from "natural";
+const natural = require("natural");
 import * as math from "mathjs";
 import { quantile } from "d3-array";
 

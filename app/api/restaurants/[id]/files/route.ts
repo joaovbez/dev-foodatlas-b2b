@@ -14,32 +14,8 @@ import { processTextFile } from "@/lib/services/chunkerTEXT";
 
 const STORAGE_LIMIT_MB = 100 
 
-// async function extractTextFromFile(file: File, ext: string): Promise<string> {
-
-//   if (ext === ".pdf") {
-//     const arrayBuffer = await file.arrayBuffer();
-//     const buffer = Buffer.from(arrayBuffer);
-//     const { default: pdfParse } = await import("pdf-parse");    
-//     const pdfData = await pdfParse(buffer);    
-//     return pdfData.text;
-
-//   } else if (ext === ".csv") {
-//     const csvText = await file.text();
-//     const parsed = Papa.parse(csvText, { header: true });
-
-//     return JSON.stringify(parsed.data, null, 2);
-  
-//   } else if (ext === ".txt") {    
-//     return await file.text();
-
-//   } else {
-//     return "";
-//   }
-// }
 async function Embeddings(file: File, ext: string, tempFilePath: string, restaurantId: string, fileId: string) {
   
-  // const text = await processTextFile(file, ext);  
-  // const embedding = await generateEmbedding(text);
   let chunks;
 
   if(ext === '.pdf'){
@@ -57,8 +33,7 @@ async function Embeddings(file: File, ext: string, tempFilePath: string, restaur
       await saveEmbedding(fileId, restaurantId, chunk, embedding);
       console.log("Embedding Armazenado");
     }
-  
-  console.log("DEU TUDO CERTO");
+
 }
 
 export async function GET(

@@ -109,32 +109,7 @@ export default function AIChatPage() {
     } 
 
     loadRestaurants()
-  }, [toast])
-
-  const [initialized, setInitialized] = useState(false);
-
-  useEffect(() => {
-    async function initChat() {
-      if (!selectedRestaurant || initialized) return;
-      try {
-        const response = await fetch(`/api/restaurants/${selectedRestaurant}/chat/init`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
-        const data = await response.json();
-        console.log("Chat inicializado:", data);
-        setInitialized(true);
-      } catch (error) {
-        console.error("Erro na inicialização do chat:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível inicializar o chat.",
-        });
-      }
-    }
-    initChat();
-  }, [selectedRestaurant, initialized, toast]);
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,7 +198,7 @@ export default function AIChatPage() {
           const chunkValue = decoder.decode(value);
           finalText += chunkValue;
           setMessages(prev => {
-            const updated = [...prev]; 
+            const updated = [...prev];
             const index = updated.findIndex((m) => m.id === partialAssistantMsgId);
             if (index !== -1) {
               updated[index] = {
@@ -441,14 +416,16 @@ export default function AIChatPage() {
                           </div>
                         ) : (
                           <ReactMarkdown
-                          components={{
-                            h1: ({ node, ...props }) => <h1 className="text-2xl font-bold my-2" {...props} />,
-                            h2: ({ node, ...props }) => <h2 className="text-xl font-semibold my-2" {...props} />,
-                            h3: ({ node, ...props }) => <h3 className="text-lg font-semibold my-2" {...props} />,
-                            ul: ({ node, ...props }) => <ul className="list-disc list-inside my-2" {...props} />,
-                            li: ({ node, ...props }) => <li className="ml-4 mb-1" {...props} />,                            
-                          }}
-                          >{msg.content}</ReactMarkdown>
+                            components={{
+                              h1: ({ node, ...props }) => <h1 className="text-2xl font-bold my-2" {...props} />,
+                              h2: ({ node, ...props }) => <h2 className="text-xl font-semibold my-2" {...props} />,
+                              h3: ({ node, ...props }) => <h3 className="text-lg font-semibold my-2" {...props} />,
+                              ul: ({ node, ...props }) => <ul className="list-disc list-inside my-2" {...props} />,
+                              li: ({ node, ...props }) => <li className="ml-4 mb-1" {...props} />,
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
                         )}
                       </div>
                       {msg.role === "user" && (
