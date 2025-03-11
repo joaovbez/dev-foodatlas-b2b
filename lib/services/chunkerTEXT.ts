@@ -174,26 +174,21 @@ const groupSentencesIntoChunks = (
   sentenceObjectArray: SentenceObject[],
   shiftIndices: number[]
 ): string[] => {
-  let startIdx = 0; // Initialize the start index
-  const chunks: string[] = []; // Create an array to hold the grouped sentences
+  let startIdx = 0; 
+  const chunks: string[] = []; 
 
-  // Add one beyond the last index to handle remaining sentences as a final chunk
   const adjustedBreakpoints = [...shiftIndices, sentenceObjectArray.length - 1];
 
-  // Iterate through the breakpoints to slice and accumulate sentences into chunks
   adjustedBreakpoints.forEach((breakpoint) => {
-    // Extract the sentences from the current start index to the breakpoint (inclusive)
     const group = sentenceObjectArray.slice(startIdx, breakpoint + 1);
-    const combinedText = group.map((item) => item.sentence).join(" "); // Combine the sentences
-    chunks.push(combinedText);
-
-    startIdx = breakpoint + 1; // Update the start index for the next group
+    const combinedText = group.map((item) => item.sentence).join(" "); 
+    startIdx = breakpoint + 1; 
   });
 
   return chunks;
 };
 
-// main() desta função
+
 export async function processTextFile(filepath: string){
   try {
     const textCorpus = await loadTextFile(filepath);

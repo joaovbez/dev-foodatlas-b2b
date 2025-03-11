@@ -417,11 +417,11 @@ export default function AIChatPage() {
                         ) : (
                           <ReactMarkdown
                             components={{
-                              h1: ({ node, ...props }) => <h1 className="text-2xl font-bold my-2" {...props} />,
-                              h2: ({ node, ...props }) => <h2 className="text-xl font-semibold my-2" {...props} />,
-                              h3: ({ node, ...props }) => <h3 className="text-lg font-semibold my-2" {...props} />,
-                              ul: ({ node, ...props }) => <ul className="list-disc list-inside my-2" {...props} />,
-                              li: ({ node, ...props }) => <li className="ml-4 mb-1" {...props} />,
+                              h1: ({...props }) => <h1 className="text-2xl font-bold my-2" {...props} />,
+                              h2: ({...props }) => <h2 className="text-xl font-semibold my-2" {...props} />,
+                              h3: ({...props }) => <h3 className="text-lg font-semibold my-2" {...props} />,
+                              ul: ({...props }) => <ul className="list-disc list-inside my-2" {...props} />,
+                              li: ({...props }) => <li className="ml-4 mb-1" {...props} />,
                             }}
                           >
                             {msg.content}
