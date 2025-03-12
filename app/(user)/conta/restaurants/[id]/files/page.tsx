@@ -19,6 +19,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Skeleton, SkeletonFileCard } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { re } from "mathjs"
 
 interface restaurantFile {
   id: string
@@ -114,7 +115,7 @@ export default function RestaurantFilesPage({
       })
 
       if (!response.ok) throw new Error("Falha ao excluir arquivo")
-
+      
       toast({
         title: "Sucesso",
         description: "Arquivo excluído com sucesso",

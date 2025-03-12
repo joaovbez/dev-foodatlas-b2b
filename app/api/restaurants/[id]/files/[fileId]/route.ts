@@ -35,6 +35,20 @@ export async function DELETE(
     if (!filePathMatch) {
       throw new Error("URL do arquivo inválida")
     }
+    // Verificar quanto tempo passou desde o upload do arquivo
+    const fileCreatedAt = new Date(file.createdAt);
+    const currentTime = new Date();
+    const timeDifferenceMs = currentTime.getTime() - fileCreatedAt.getTime();
+    const timeDifferenceMinutes = Math.floor(timeDifferenceMs / (1000 * 60));
+    
+    // Se passaram menos de 90 minutos, não permitir a exclusão
+    if (timeDifferenceMinutes < 90) {
+      console.error("Não é possível excluir o arquivo antes de 90 minutos após o upload")
+      return new NextResponse( "Não é possível excluir o arquivo antes de 90 minutos após o upload", { status: 403 });
+    }
+    // Deletar embeddings do BigQuery
+    await deleteFileEmbeddings(file.id, file.restaurantId)
+    console.log("embeddings deletados");
 
     // Deletar do Google Cloud Storage
     await bucket.file(filePathMatch[0]).delete()
@@ -45,10 +59,6 @@ export async function DELETE(
         id: file.id,
       },
     })
-    
-    // Deletar embeddings do BigQuery
-    await deleteFileEmbeddings(file.id, file.restaurantId)
-    console.log("embeddings deletados");
 
     return new NextResponse(null, { status: 204 })
   } catch (error) {

@@ -4,7 +4,6 @@ const natural = require("natural");
 import * as math from "mathjs";
 import { quantile } from "d3-array";
 import { generateSummary } from "./openAI";
-import { text } from "stream/consumers";
 
 interface SentenceObject {
   sentence: string;
@@ -71,7 +70,9 @@ const generateAndAttachEmbeddings = async (
   sentencesArray: SentenceObject[]
 ): Promise<SentenceObject[]> => {
   
-  const embeddings = new OpenAIEmbeddings();
+  const embeddings = new OpenAIEmbeddings({
+    model: "text-embedding-3-large"
+  });
 
   // Cria uma cópia do array original para mexer apenas nesta cópia (segurança em caso de erro)
   const sentencesArrayCopy: SentenceObject[] = sentencesArray.map(
@@ -190,7 +191,7 @@ const groupSentencesIntoChunks = (
 };
 
 
-export async function processTextFile(filepath: string){
+export async function processTXTFile(filepath: string){
   try {
     const textCorpus = await loadTextFile(filepath);
 
@@ -203,7 +204,7 @@ export async function processTextFile(filepath: string){
     );
     
     const { updatedArray, significantShiftIndices } =
-      calculateCosineDistancesAndSignificantShifts(sentencesWithEmbeddings, 90); 
+      calculateCosineDistancesAndSignificantShifts(sentencesWithEmbeddings, 92); 
 
     const semanticChunks = groupSentencesIntoChunks(
       updatedArray,

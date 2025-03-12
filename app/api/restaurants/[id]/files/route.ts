@@ -4,13 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import { v4 as uuidv4 } from 'uuid';
-// import Papa from "papaparse"; 
 import path from "path";
 import os from "os";
 import fs from "fs";
 import { generateEmbedding } from "@/lib/services/openAI";
 import { saveEmbedding } from "@/lib/services/big-query";
-import { processTextFile } from "@/lib/services/chunkerTEXT";
+import { processTXTFile } from "@/lib/services/chunkerTXT";
+import { processPDFFile } from "@/lib/services/chunkerPDF";
 
 const STORAGE_LIMIT_MB = 100 
 
@@ -19,11 +19,11 @@ async function Embeddings(file: File, ext: string, tempFilePath: string, restaur
   let chunks_AND_summary;
 
   if(ext === '.pdf'){
-    // chunks = await processPDFFile(file, ext);  
+    chunks_AND_summary = await processPDFFile(tempFilePath);  
   } else if (ext === '.csv'){
     // chunks = await processCSVFile(file, ext);  
   } else if (ext === '.txt'){
-    chunks_AND_summary = await processTextFile(tempFilePath);
+    chunks_AND_summary = await processTXTFile(tempFilePath);
   } 
   
   let chunks = chunks_AND_summary?.semanticChunks;

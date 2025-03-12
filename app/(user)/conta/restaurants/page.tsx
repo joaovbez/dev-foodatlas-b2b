@@ -70,9 +70,7 @@ export default function RestaurantsPage() {
         method: "DELETE",
       })
 
-      if (!response.ok) {
-        throw new Error("Falha ao excluir restaurante")
-      }
+      if (!response.ok) throw new Error("Falha ao excluir restaurante")
 
       toast({
         title: "Sucesso",

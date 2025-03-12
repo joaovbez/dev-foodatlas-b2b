@@ -17,12 +17,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const best_results = await vector_search(embedding_input, 5, restaurantId);
     console.log('Busca semantica concluida');
 
-    const contextText = best_results.map((result) => `Resumo do arquivo: ${result.summary}\n\n${result.text}`).join("\n\n");
-    const summarys = best_results.map((result) => result.summary);
-    console.log(summarys);
-    const prompt = `Você é um assistente que deve responder baseando-se exclusivamente no contexto e nas informações e dados fornecidos a seguir.
+    const contextText = best_results.map((result) => `Resumo do arquivo original: ${result.summary}\n\n Trecho relevante: "${result.text}" `).join("\n\n");
+    
+    const prompt = `Você é um assistente de dados com vasta experiência no setor de restaurantes, devendo responder as perguntas do usuários
+    da nossa plataforma (donos de restaurantes) da melhor forma possível, fornencendo insights e recomendações baseando-se exclusivamente no contexto e nas informações e dados fornecidos a seguir.
 
+    
     ## A empresa tem como missão oferecer os melhores insights e recomendações para restaurantes cadastrados na plataforma, utilizando dados internos para embasar as respostas.
+    ## Seja direto e conciso, porém sua resposta estar correta e bem embasada, sendo provavelmente o insight/consulta/recomendação que o usuário esta precisando.
     
     ### O restaurante em questão forneceu os seguintes dados/relatórios, que vieram de arquivos que ele anexou em nossa plataforma, logo, acima de cada informação abaixo: você verá
     de qual arquivo ela surgiu, como o título e um breve resumo.
@@ -31,6 +33,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     ## INSTRUÇÕES:
     
+    - Se dois trechos relevantes possuem o mesmo resumo de arquivo original, significam que eles vieram de um mesmo documento, logo,
+      você pode concatenar trechos relevantes para concluir sua resposta caso faça sentido.
+
     - Se acima não houver tido nenhuma informação relevante, significa que o restaurante não forneceu dados suficientes para nossa base, logo, responda:
         "Infelizmente ainda não temos informações suficientes sobre o seu restaurante para responder essa pergunta, 
          verifique no gerenciamento dos arquivos se informações semelhantes foram cadastradas. Se achar conveniente, entre em contato com nosso suporte via WhatsApp".
@@ -50,6 +55,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     ### Agora, tendo em mãos as informações do restaurante e o contexto da empresa, responda à seguinte pergunta:
     "${question}"`;          
 
+    console.log(prompt);
     const streamResponse = await generateResponse(prompt);
 
     const encoder = new TextEncoder();

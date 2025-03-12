@@ -158,6 +158,30 @@ export async function DELETE(
       return new NextResponse("Restaurante não encontrado", { status: 404 })
     }
 
+    // Buscar o arquivo mais recente do restaurante
+    const mostRecentFile = await prisma.restaurantFile.findFirst({
+      where: {
+        restaurantId: params.id,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Verificar se existe algum arquivo e quanto tempo passou desde o upload mais recente
+    if (mostRecentFile) {
+      const fileCreatedAt = new Date(mostRecentFile.createdAt);
+      const currentTime = new Date();
+      const timeDifferenceMs = currentTime.getTime() - fileCreatedAt.getTime();
+      const timeDifferenceMinutes = Math.floor(timeDifferenceMs / (1000 * 60));
+      
+      // Se passaram menos de 90 minutos desde o upload mais recente, não permitir a exclusão
+      if (timeDifferenceMinutes < 90) {
+        console.error("Não é possível excluir o arquivo antes de 90 minutos após o upload")
+        return new NextResponse("Não é possível excluir o restaurante antes de 90 minutos após o último upload de arquivo", { status: 403 });
+      }
+    }
+
     // Excluir o restaurante do banco de dados SQL
     await prisma.restaurant.delete({
       where: {

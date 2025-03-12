@@ -14,7 +14,7 @@ export async function generateResponse(prompt: string): Promise<any>{
   const streamResponse = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: "Você é um analista de dados experiente." },
+      { role: "system", content: "Você é um assistente que deve responder baseando-se exclusivamente no contexto e nas informações e dados fornecidos." },
       { role: "user", content: prompt },
     ],
     temperature: 0,
@@ -27,7 +27,7 @@ export async function generateSummary(text: string): Promise<string> {
 
   const prompt_summary = ` 
   # Você é um assistente especializado em análise de arquivos de texto.
-  ## Tarefa: Ler todo o conteúdo do arquivo fornecido e produzir um resumo conciso (idealmente 2 a 3 frases) que inclua:
+  ## Tarefa: Ler todo o conteúdo do arquivo fornecido e produzir um resumo conciso (no máximo 3 frases não muito longas) que inclua:
 
   - O foco principal do arquivo (sobre o que ele trata).
   - O período ou intervalo de tempo que o arquivo cobre (caso seja mencionado).
