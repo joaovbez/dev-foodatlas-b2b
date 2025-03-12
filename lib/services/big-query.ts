@@ -6,7 +6,7 @@ const bigquery = new BigQuery({
 });
 
 export async function saveEmbedding(fileId: string, restaurantId: string, 
-                                    text: string, embedding: number[]): Promise<void>{
+                                    text: string, embedding: number[], summary?: string): Promise<void>{
 
   const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
   const datasetId = process.env.GOOGLE_DATASET_EMBEDDINGS;
@@ -44,9 +44,10 @@ export async function saveEmbedding(fileId: string, restaurantId: string,
     restaurantId,
     text,
     embedding,
+    summary,
     createdAt: new Date().toISOString(), 
   };
-
+  
   try {
     await table.insert(row);
   } catch (err) {
@@ -55,11 +56,56 @@ export async function saveEmbedding(fileId: string, restaurantId: string,
   }
 }
 
+export async function deleteFileEmbeddings(fileId: string, restaurantId: string): Promise<void>{
+
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
+  const datasetId = process.env.GOOGLE_DATASET_EMBEDDINGS;
+  const tableId = process.env.GOOGLE_TABLE_EMBEDDINGS;
+
+  const dataset = bigquery.dataset(datasetId, {projectId});
+  const table = dataset.table(tableId);
+
+  const query = `
+    DELETE FROM \`foodatlas-442513.b2b_embeddings.embeddings\`
+    WHERE fileId = '${fileId}' AND restaurantId = '${restaurantId}'
+  `;
+
+  try {
+    await bigquery.query(query);
+  } catch (err) {
+    console.error("Erro ao deletar linha no BigQuery:", err);
+    throw err;
+  }
+}
+
+export async function deleteRestaurantEmbeddings(restaurantId: string): Promise<void>{
+
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
+  const datasetId = process.env.GOOGLE_DATASET_EMBEDDINGS;  
+  const tableId = process.env.GOOGLE_TABLE_EMBEDDINGS;
+
+  const dataset = bigquery.dataset(datasetId, {projectId});
+  const table = dataset.table(tableId);
+
+  const query = `
+    DELETE FROM \`foodatlas-442513.b2b_embeddings.embeddings\`
+    WHERE restaurantId = '${restaurantId}'
+  `;
+
+  try {    
+    await bigquery.query(query);
+  } catch (err) {
+    console.error("Erro ao deletar linha no BigQuery:", err);
+    throw err;
+  }
+}
+
 interface EmbeddingResult {
   fileId: string;
   restaurantId: string;
   text: string;
-  distance: number;
+  summary: string;
+  distance: number;  
 }
 
 export async function vector_search(embedding_input: number[], topK: number, restaurantId: string) :Promise<EmbeddingResult[]>{
@@ -70,7 +116,8 @@ export async function vector_search(embedding_input: number[], topK: number, res
   SELECT 
     base.fileId, 
     base.restaurantId, 
-    base.text, 
+    base.text,
+    base.summary,
     distance
   FROM VECTOR_SEARCH(
     TABLE \`foodatlas-442513.b2b_embeddings.embeddings\`,
@@ -98,6 +145,7 @@ export async function vector_search(embedding_input: number[], topK: number, res
       fileId: row.fileId,
       restaurantId: row.restaurantId,
       text: row.text,
+      summary: row.summary,
       distance: row.distance,
     }));
   } catch(error)  {

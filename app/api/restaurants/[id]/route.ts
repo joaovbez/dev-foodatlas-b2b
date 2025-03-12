@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
+import { deleteRestaurantEmbeddings } from "@/lib/services/big-query"
 
 export async function GET(
   req: Request,
@@ -157,12 +158,25 @@ export async function DELETE(
       return new NextResponse("Restaurante não encontrado", { status: 404 })
     }
 
-    // Excluir o restaurante
+    // Excluir o restaurante do banco de dados SQL
     await prisma.restaurant.delete({
       where: {
         id: params.id,
       },
     })
+
+    // Excluir os arquivos relacionados ao restaurante do banco de dados SQL
+    await prisma.restaurantFile.deleteMany({
+      where: {
+        restaurantId: params.id,
+      },
+    })
+    
+    // Excluir buckets relacionados ao restaurante
+    // falta fazer isso
+
+    // Excluir embeddings dos arquivos relacionados ao restaurante
+    await deleteRestaurantEmbeddings(existingRestaurant.id)
 
     return new NextResponse(null, { status: 204 })
   } catch (error) {

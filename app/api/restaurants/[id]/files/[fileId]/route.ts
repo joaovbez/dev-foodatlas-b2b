@@ -3,7 +3,7 @@ import { bucket } from "@/lib/google-cloud-storage"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
-
+import {deleteFileEmbeddings } from "@/lib/services/big-query"
 
 export async function DELETE(
   req: NextRequest,
@@ -45,6 +45,10 @@ export async function DELETE(
         id: file.id,
       },
     })
+    
+    // Deletar embeddings do BigQuery
+    await deleteFileEmbeddings(file.id, file.restaurantId)
+    console.log("embeddings deletados");
 
     return new NextResponse(null, { status: 204 })
   } catch (error) {

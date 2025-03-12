@@ -3,7 +3,8 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 const natural = require("natural");
 import * as math from "mathjs";
 import { quantile } from "d3-array";
-
+import { generateSummary } from "./openAI";
+import { text } from "stream/consumers";
 
 interface SentenceObject {
   sentence: string;
@@ -180,9 +181,11 @@ const groupSentencesIntoChunks = (
   adjustedBreakpoints.forEach((breakpoint) => {
     const group = sentenceObjectArray.slice(startIdx, breakpoint + 1);
     const combinedText = group.map((item) => item.sentence).join(" "); 
+    chunks.push(combinedText);
     startIdx = breakpoint + 1; 
   });
 
+  console.log(chunks);
   return chunks;
 };
 
@@ -198,7 +201,7 @@ export async function processTextFile(filepath: string){
     const sentencesWithEmbeddings = await generateAndAttachEmbeddings(
       structuredSentences
     );
-
+    
     const { updatedArray, significantShiftIndices } =
       calculateCosineDistancesAndSignificantShifts(sentencesWithEmbeddings, 90); 
 
@@ -206,9 +209,11 @@ export async function processTextFile(filepath: string){
       updatedArray,
       significantShiftIndices
     );
-
-    return semanticChunks;
-
+     
+    const summary = await generateSummary(textCorpus);
+    
+    return { summary, semanticChunks };
+  
   } catch (error) {
     console.error("An error occurred in the main function:", error);
   }

@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import path from "path";
 import os from "os";
 import fs from "fs";
-import { generateEmbedding } from "@/lib/services/generate-embeddings";
+import { generateEmbedding } from "@/lib/services/openAI";
 import { saveEmbedding } from "@/lib/services/big-query";
 import { processTextFile } from "@/lib/services/chunkerTEXT";
 
@@ -16,21 +16,24 @@ const STORAGE_LIMIT_MB = 100
 
 async function Embeddings(file: File, ext: string, tempFilePath: string, restaurantId: string, fileId: string) {
   
-  let chunks;
+  let chunks_AND_summary;
 
   if(ext === '.pdf'){
     // chunks = await processPDFFile(file, ext);  
   } else if (ext === '.csv'){
     // chunks = await processCSVFile(file, ext);  
   } else if (ext === '.txt'){
-    chunks = await processTextFile(tempFilePath);  
+    chunks_AND_summary = await processTextFile(tempFilePath);
   } 
   
+  let chunks = chunks_AND_summary?.semanticChunks;
+  let summary = chunks_AND_summary?.summary;
+
   if(chunks)
     for (const chunk of chunks) {
       const embedding = await generateEmbedding(chunk);
       console.log("Embeddding Gerado");
-      await saveEmbedding(fileId, restaurantId, chunk, embedding);
+      await saveEmbedding(fileId, restaurantId, chunk, embedding, summary);
       console.log("Embedding Armazenado");
     }
 

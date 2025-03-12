@@ -1,6 +1,6 @@
 // /app/api/restaurants/[id]/chat/route.ts
 import { NextResponse } from "next/server";
-import { generateEmbedding, generateResponse } from "@/lib/services/generate-embeddings";
+import { generateEmbedding, generateResponse } from "@/lib/services/openAI";
 import { vector_search } from "@/lib/services/big-query";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
@@ -17,13 +17,15 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const best_results = await vector_search(embedding_input, 5, restaurantId);
     console.log('Busca semantica concluida');
 
-    const contextText = best_results.map((result) => result.text).join("\n\n");
-    
+    const contextText = best_results.map((result) => `Resumo do arquivo: ${result.summary}\n\n${result.text}`).join("\n\n");
+    const summarys = best_results.map((result) => result.summary);
+    console.log(summarys);
     const prompt = `Você é um assistente que deve responder baseando-se exclusivamente no contexto e nas informações e dados fornecidos a seguir.
 
     ## A empresa tem como missão oferecer os melhores insights e recomendações para restaurantes cadastrados na plataforma, utilizando dados internos para embasar as respostas.
     
-    ### O restaurante em questão forneceu os seguintes dados/relatórios:
+    ### O restaurante em questão forneceu os seguintes dados/relatórios, que vieram de arquivos que ele anexou em nossa plataforma, logo, acima de cada informação abaixo: você verá
+    de qual arquivo ela surgiu, como o título e um breve resumo.
     
     ${contextText}
 
