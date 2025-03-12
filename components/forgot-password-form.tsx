@@ -1,15 +1,61 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setLoading(true)
+
+    const formData = new FormData(event.currentTarget)
+    const email = formData.get("email") as string
+
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      if (!res.ok) {
+        const error = await res.text()
+        throw new Error(error)
+      }
+
+      toast({
+        title: "Email enviado!",
+        description: "Verifique seu email para redefinir sua senha.",
+      })
+
+      router.push("/login")
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao enviar email",
+        description: error instanceof Error ? error.message : "Algo deu errado",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form onSubmit={onSubmit} className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="text-2xl font-bold text-gray-700">Alteração de Senha</h1>
         <p className="text-balance text-sm text-muted-foreground">
@@ -20,10 +66,23 @@ export function ForgotPasswordForm({
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="nome@email.com" required />
+          <Input 
+            name="email" 
+            id="email" 
+            type="email" 
+            placeholder="nome@email.com" 
+            required 
+          />
         </div>        
-        <Button type="submit" className="w-full" asChild>
-          <Link href="#">Enviar link de recuperação</Link>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="mr-2">Enviando</span>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            </>
+          ) : (
+            "Enviar link de recuperação"
+          )}
         </Button>        
       </div>
       <div className="text-center text-sm">        

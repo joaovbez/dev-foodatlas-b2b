@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
+import { Eye, EyeOff } from "lucide-react"
 
 export function LoginForm({
   className,
@@ -18,6 +19,29 @@ export function LoginForm({
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem("rememberedCredentials")
+    if (savedCredentials) {
+      const { email, password } = JSON.parse(savedCredentials)
+      setEmail(email)
+      setPassword(password)
+      setRememberMe(true)
+    }
+  }, [])
+
+  const handleRememberMeChange = (checked: boolean) => {
+    setRememberMe(checked)
+    if (!checked) {
+      localStorage.removeItem("rememberedCredentials")
+      setEmail("")
+      setPassword("")
+    }
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -61,6 +85,10 @@ export function LoginForm({
       }
 
       if (result?.ok) {
+        if (rememberMe) {
+          localStorage.setItem("rememberedCredentials", JSON.stringify({ email, password }))
+        }
+
         toast({
           title: "Login realizado com sucesso!",
           description: "Redirecionando para sua conta...",
@@ -93,7 +121,15 @@ export function LoginForm({
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
-          <Input name="email" id="email" type="email" placeholder="nome@email.com" required />
+          <Input 
+            name="email" 
+            id="email" 
+            type="email" 
+            placeholder="nome@email.com" 
+            required 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <div className="grid gap-2">
           <div className="flex items-center">
@@ -105,10 +141,42 @@ export function LoginForm({
               Esqueceu sua senha?
             </a>
           </div>
-          <Input name="password" id="password" type="password" required />
+          <div className="relative">
+            <Input 
+              name="password" 
+              id="password" 
+              type={showPassword ? "text" : "password"} 
+              placeholder="••••••••" 
+              required 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4 text-gray-500" />
+              ) : (
+                <Eye className="h-4 w-4 text-gray-500" />
+              )}
+            </Button>
+          </div>
           <div className="flex items-center space-x-2">
-            <Checkbox id="remember" />
-            <Label htmlFor="remember">Lembrar-me</Label>
+            <Checkbox 
+              id="remember" 
+              checked={rememberMe}
+              onCheckedChange={(checked) => handleRememberMeChange(checked as boolean)}
+            />
+            <Label 
+              htmlFor="remember" 
+              className="text-sm cursor-pointer"
+            >
+              Lembrar-me
+            </Label>
           </div>
         </div>
 
