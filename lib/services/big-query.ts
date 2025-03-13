@@ -2,7 +2,10 @@ const {BigQuery} = require('@google-cloud/bigquery');
 
 const bigquery = new BigQuery({
   projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+  credentials: {
+    client_email: process.env.GBQ_CLIENT_EMAIL,
+    private_key: process.env.GBQ_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  },
 });
 
 export async function saveEmbedding(fileId: string, restaurantId: string, 
