@@ -57,7 +57,8 @@ export function LoginForm({
         password,
         redirect: false,
       })
-
+      console.log(result);
+      
       if (result?.error === "EMAIL_NOT_VERIFIED") {
         const verifyRes = await fetch("/api/auth/verify-email", {
           method: "POST",
