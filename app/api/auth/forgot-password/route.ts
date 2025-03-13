@@ -24,7 +24,8 @@ export async function POST(request: Request) {
 
     // Gerar token único
     const resetToken = crypto.randomBytes(32).toString("hex")
-    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
+    // Token expira em 24 horas
+    const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
     // Salvar token no banco
     await prisma.user.update({
@@ -36,7 +37,13 @@ export async function POST(request: Request) {
     })
 
     // URL de reset
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000"
+    console.log("Base URL:", baseUrl) // Debug
+    
+    const resetUrl = new URL("/reset-password", baseUrl)
+    resetUrl.searchParams.set("token", resetToken)
+    
+    console.log("Reset URL:", resetUrl.toString()) // Debug
 
     // Enviar email
     await resend.emails.send({
@@ -53,13 +60,18 @@ export async function POST(request: Request) {
             Clique no botão abaixo para redefinir sua senha:
           </p>
           <div style="text-align: center; margin: 20px 0;">
-            <a href="${resetUrl}" 
+            <a href="${resetUrl.toString()}" 
                style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
               Redefinir Senha
             </a>
           </div>
           <p style="color: #666; text-align: center;">
-            Este link expira em 1 hora.
+            Este link expira em 24 horas.
+          </p>
+          <p style="color: #666; text-align: center;">
+            Se você não conseguir clicar no botão, copie e cole este link no seu navegador:
+            <br>
+            <span style="color: #4CAF50;">${resetUrl.toString()}</span>
           </p>
           <p style="color: #666; text-align: center; font-size: 12px;">
             Se você não solicitou esta recuperação de senha, ignore este email.
