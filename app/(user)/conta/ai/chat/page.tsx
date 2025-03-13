@@ -422,6 +422,7 @@ export default function AIChatPage() {
                               h3: ({...props }) => <h3 className="text-lg font-semibold my-2" {...props} />,
                               ul: ({...props }) => <ul className="list-disc list-inside my-2" {...props} />,
                               li: ({...props }) => <li className="ml-4 mb-1" {...props} />,
+                              a: ({...props}) => <a {...props} className="text-primary underline" target="_blank" rel="noopener noreferrer" />
                             }}
                           >
                             {msg.content}

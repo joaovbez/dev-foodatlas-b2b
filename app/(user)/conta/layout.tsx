@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useTheme } from "next-themes"
 import Image from 'next/image'
+import { WhatsAppButton } from "@/components/support-button"
 
 export default function UserLayout({
   children,
@@ -64,6 +65,9 @@ export default function UserLayout({
         {children}
       </SidebarInset>
       <Toaster />
+      <div className="fixed bottom-6 right-6 z-50">
+      <WhatsAppButton phoneNumber="551150265550" variant="default" size="support"/>
+      </div>      
     </SidebarProvider>
   )
 } 
