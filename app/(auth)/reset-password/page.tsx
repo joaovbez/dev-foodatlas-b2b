@@ -1,8 +1,30 @@
+"use client"
+
 import { ResetPasswordForm } from "@/components/reset-password-form"
 import logo_1 from "@/public/foodatlas_LOGOS-09.svg"
 import logo_2 from "@/public/foodatlas_LOGOS_Prancheta 1 cópia 3.svg"
+import { useSearchParams } from "next/navigation"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
-export default function ResetPasswordPage() {
+export default function Page() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const token = searchParams.get("token")
+    if (!token) {
+      toast({
+        variant: "destructive",
+        title: "Link inválido",
+        description: "Este link de recuperação de senha é inválido ou expirou.",
+      })
+      router.push("/login")
+    }
+  }, [searchParams, router, toast])
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">  
       

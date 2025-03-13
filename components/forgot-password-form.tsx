@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
 
 export function ForgotPasswordForm({
   className,
@@ -20,10 +21,10 @@ export function ForgotPasswordForm({
     event.preventDefault()
     setLoading(true)
 
-    const formData = new FormData(event.currentTarget)
-    const email = formData.get("email") as string
-
     try {
+      const formData = new FormData(event.currentTarget)
+      const email = formData.get("email") as string
+
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: {
@@ -32,18 +33,24 @@ export function ForgotPasswordForm({
         body: JSON.stringify({ email }),
       })
 
+      const data = await res.json()
+
       if (!res.ok) {
-        const error = await res.text()
-        throw new Error(error)
+        throw new Error(data.message || "Erro ao enviar email")
       }
 
       toast({
         title: "Email enviado!",
-        description: "Verifique seu email para redefinir sua senha.",
+        description: "Você receberá as instruções de recuperação no seu email.",
       })
 
+      // Aguardar um momento para mostrar a mensagem de sucesso
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Usar router.push para navegação client-side
       router.push("/login")
     } catch (error) {
+      console.error("Erro ao enviar email:", error)
       toast({
         variant: "destructive",
         title: "Erro ao enviar email",
@@ -86,9 +93,9 @@ export function ForgotPasswordForm({
         </Button>        
       </div>
       <div className="text-center text-sm">        
-        <a href="/login" className="underline underline-offset-4">
+        <Link href="/login" className="underline underline-offset-4">
           Voltar para página de login
-        </a>
+        </Link>
       </div>
     </form>
   )
