@@ -1,4 +1,5 @@
 "use client"
+export const dynamic = "force-dynamic"
 
 import { ResetPasswordForm } from "@/components/reset-password-form"
 import logo_1 from "@/public/foodatlas_LOGOS-09.svg"
