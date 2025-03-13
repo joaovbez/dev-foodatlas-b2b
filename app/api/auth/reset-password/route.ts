@@ -10,6 +10,8 @@ export async function POST(request: Request) {
       return new NextResponse("Token e senha são obrigatórios", { status: 400 })
     }
 
+    console.log("Verificando token:", token) // Debug
+
     const user = await prisma.user.findFirst({
       where: {
         resetToken: token,
@@ -18,6 +20,8 @@ export async function POST(request: Request) {
         },
       },
     })
+
+    console.log("Usuário encontrado:", user ? "Sim" : "Não") // Debug
 
     if (!user) {
       return new NextResponse("Token inválido ou expirado", { status: 400 })
@@ -39,6 +43,9 @@ export async function POST(request: Request) {
     return new NextResponse("Senha alterada com sucesso", { status: 200 })
   } catch (error) {
     console.error("[RESET_PASSWORD_ERROR]", error)
-    return new NextResponse("Erro interno do servidor", { status: 500 })
+    return new NextResponse(
+      error instanceof Error ? error.message : "Erro interno do servidor", 
+      { status: 500 }
+    )
   }
 } 
