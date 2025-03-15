@@ -20,6 +20,7 @@ import { Progress } from "@/components/ui/progress"
 import { Skeleton, SkeletonFileCard } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import { re } from "mathjs"
+import { UploadDialog } from "@/components/dialog-upload"
 
 interface restaurantFile {
   id: string
@@ -74,9 +75,7 @@ export default function RestaurantFilesPage({
     loadFiles()
   }, [loadFiles])
 
-  async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
+  async function uploadFile(file: File) {
 
     setUploading(true)
     const formData = new FormData()
@@ -181,31 +180,7 @@ export default function RestaurantFilesPage({
           </Button>
           <h1 className="text-lg font-semibold md:text-xl">Arquivos do Restaurante</h1>
         </div>
-        <Button 
-          disabled={uploading} 
-          asChild
-          className="hover:bg-[#A3E635]/10 hover:text-black hover:border-[#A3E635]"
-        >
-          <label className="cursor-pointer">
-            <input
-              type="file"
-              className="hidden"
-              onChange={handleFileUpload}
-              accept=".pdf,.doc,.docx,.txt,.csv"
-            />
-            {uploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-2 h-4 w-4" />
-                Upload
-              </>
-            )}
-          </label>
-        </Button>
+        <UploadDialog onUpload={uploadFile} uploading={uploading} />
       </header>
 
       <main className="flex-1 space-y-4 p-4 md:p-6">
@@ -244,18 +219,7 @@ export default function RestaurantFilesPage({
             <p className="mt-2 text-sm text-muted-foreground">
               Você tem {usage?.availableStorage}MB disponíveis para upload
             </p>
-            <Button className="mt-4" asChild>
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                  accept=".pdf,.doc,.docx,.txt,.csv"
-                />
-                <Upload className="mr-2 h-4 w-4" />
-                Upload de Arquivo
-              </label>
-            </Button>
+            <UploadDialog onUpload={uploadFile} uploading={uploading} />
           </div>
         ) : (
           <div className="space-y-4">
