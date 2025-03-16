@@ -54,7 +54,7 @@ const FILE_TYPES = [
 ]
 
 interface UploadDialogProps {
-  onUpload: (file: File) => Promise<void>
+  onUpload: (file: File, selectedType: string) => Promise<void>
   uploading: boolean
 }
 
@@ -90,7 +90,7 @@ export function UploadDialog({ onUpload, uploading }: UploadDialogProps) {
     // Fecha o dialog (opcional)
     setOpen(false)
     // Chama a função de upload que você passou via props
-    await onUpload(file)
+    await onUpload(file, selectedType)
   }
 
   return (

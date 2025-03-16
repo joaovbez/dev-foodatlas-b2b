@@ -129,6 +129,7 @@ export async function POST(
     // Verificar o arquivo novo
     const formData = await req.formData()
     const file = formData.get("file") as File
+    const selectedFileType = formData.get("fileType") as string
     
     if (!file) {
       return new NextResponse("Nenhum arquivo enviado", { status: 400 })
@@ -145,7 +146,7 @@ export async function POST(
     }
 
     const fileBuffer = Buffer.from(await file.arrayBuffer())
-    const fileName = `${restaurant.id}/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${uuidv4()}-${file.name}`
+    const fileName = `${restaurant.id}/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${selectedFileType}/${uuidv4()}-${file.name}`
     
     const blob = bucket.file(`restaurants/${fileName}`)
     
@@ -177,6 +178,7 @@ export async function POST(
               size: file.size,
               type: file.type,
               url: publicUrl,
+              fileType: selectedFileType,
               restaurantId: restaurant.id,
             },
           })
@@ -190,8 +192,6 @@ export async function POST(
           fs.writeFileSync(tempFilePath, fileBuffer);
           await Embeddings(file, ext, tempFilePath, restaurant.id, fileRecord.id)
           fs.unlinkSync(tempFilePath);           
-          
-          
 
         } catch (error) {
           console.error("Erro ao salvar arquivo:", error)
