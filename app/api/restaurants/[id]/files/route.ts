@@ -129,7 +129,8 @@ export async function POST(
     // Verificar o arquivo novo
     const formData = await req.formData()
     const file = formData.get("file") as File
-    
+    const documentType = formData.get("documentType") as string
+
     if (!file) {
       return new NextResponse("Nenhum arquivo enviado", { status: 400 })
     }
@@ -145,8 +146,10 @@ export async function POST(
     }
 
     const fileBuffer = Buffer.from(await file.arrayBuffer())
-    const fileName = `${restaurant.id}/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${uuidv4()}-${file.name}`
-    
+
+    const sanitizedDocumentType = documentType.trim().toLowerCase().replace(/\s+/g, '-');
+    const fileName = `${restaurant.id}/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${sanitizedDocumentType}/${uuidv4()}-${file.name}`;
+        
     const blob = bucket.file(`restaurants/${fileName}`)
     
     return new Promise((resolve, reject) => {
@@ -166,7 +169,7 @@ export async function POST(
         }
         reject(new NextResponse("Erro ao fazer upload do arquivo", { status: 500 }))
       })
-
+      
       blobStream.on('finish', async () => {
         try {
           const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`
@@ -177,6 +180,7 @@ export async function POST(
               size: file.size,
               type: file.type,
               url: publicUrl,
+              documentType: documentType,              
               restaurantId: restaurant.id,
             },
           })

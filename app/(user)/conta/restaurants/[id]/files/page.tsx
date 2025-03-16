@@ -75,11 +75,13 @@ export default function RestaurantFilesPage({
     loadFiles()
   }, [loadFiles])
 
-  async function uploadFile(file: File) {
+  async function uploadFile({ file, documentType }: { file: File; documentType: string }) {
 
     setUploading(true)
     const formData = new FormData()
-    formData.append("file", file)
+    formData.append("file", file);
+    formData.append("documentType", documentType);
+    
 
     try {
       const response = await fetch(`/api/restaurants/${params.id}/files`, {
