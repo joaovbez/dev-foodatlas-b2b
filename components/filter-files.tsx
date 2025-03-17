@@ -61,7 +61,6 @@ export default function FilterButton({
 
   const [open, setOpen] = useState(false)
 
-  // Create a custom locale with capitalized month names
   const ptBRCustom = {
     ...ptBR,
     localize: {
@@ -103,12 +102,10 @@ export default function FilterButton({
   }
 
   const resetFilters = () => {
-    // Reset date range
     setDate({
       from: undefined,
       to: undefined,
     })
-    // Reset selected file types
     setSelectedFileTypes([])
   }
 
@@ -146,9 +143,9 @@ export default function FilterButton({
                 onSelect={(range) => setDate(range ? { from: range.from, to: range.to ?? range.from } : { from: undefined, to: undefined })}
                 className="rounded-md border"
                 disabled={(date) => {
-                  // Disable dates after today
+                  // Desabilitar datas depois de "hoje"
                   const today = new Date()
-                  today.setHours(0, 0, 0, 0) // Reset time to start of day for accurate comparison
+                  today.setHours(0, 0, 0, 0) 
                   return date > today
                 }}
                 locale={ptBRCustom}

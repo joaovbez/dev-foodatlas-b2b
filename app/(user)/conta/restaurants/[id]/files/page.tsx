@@ -81,16 +81,16 @@ export default function RestaurantFilesPage({
     loadFiles()
   }, [loadFiles])
 
-  // Get unique document types from files for filter options
+  // Aparecer nos filtros apenas os tipos de documentos que o usuário possui
   const availableDocumentTypes = useMemo(() => {
     if (!files.length) return []
     return Array.from(new Set(files.map((file) => file.documentType)))
   }, [files])
 
-  // Apply filters to files
+  
   const filteredFiles = useMemo(() => {
     return files.filter((file) => {
-      // Filter by date range
+      // Filtrar pela data
       if (filters.dateRange.from || filters.dateRange.to) {
         const fileDate = new Date(file.createdAt)
 
@@ -99,7 +99,6 @@ export default function RestaurantFilesPage({
         }
 
         if (filters.dateRange.to) {
-          // Set the end of day for the "to" date for inclusive filtering
           const endDate = new Date(filters.dateRange.to)
           endDate.setHours(23, 59, 59, 999)
           if (fileDate > endDate) {
@@ -108,7 +107,7 @@ export default function RestaurantFilesPage({
         }
       }
 
-      // Filter by file types
+      // Filtrar pelos tipos de documento
       if (filters.fileTypes.length > 0 && !filters.fileTypes.includes(file.documentType)) {
         return false
       }

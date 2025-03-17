@@ -114,7 +114,6 @@ interface EmbeddingResult {
 export async function vector_search(embedding_input: number[], topK: number, restaurantId: string) :Promise<EmbeddingResult[]>{
   
   const vectorString = JSON.stringify(embedding_input);
-
   const query = `
   SELECT 
     base.fileId, 
@@ -123,7 +122,11 @@ export async function vector_search(embedding_input: number[], topK: number, res
     base.summary,
     distance
   FROM VECTOR_SEARCH(
-    TABLE \`foodatlas-442513.b2b_embeddings.embeddings\`,
+    (      
+      SELECT fileId, restaurantId, text, summary, embedding
+      FROM \`foodatlas-442513.b2b_embeddings.embeddings\`
+      WHERE restaurantId = '${restaurantId}'
+    ),
     'embedding',
     (
       SELECT * FROM UNNEST([
@@ -136,21 +139,20 @@ export async function vector_search(embedding_input: number[], topK: number, res
     'embedding',
     top_k => ${topK},
     distance_type => "COSINE"
-  )
-  WHERE base.restaurantId = '${restaurantId}'
+  )  
   ORDER BY distance ASC
   `;
     
   try{
     const [rows] = await bigquery.query(query);
-    
+    console.log(rows);
     return rows.map((row: any) => ({
       fileId: row.fileId,
       restaurantId: row.restaurantId,
       text: row.text,
       summary: row.summary,
       distance: row.distance,
-    }));
+    }));    
   } catch(error)  {
     console.error("Erro ao executar consulta de Vector Search:", error);
     throw error;
