@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Loader2, ArrowLeft, Upload, FileText, Trash2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Loader2, ArrowLeft, FileText, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
   AlertDialog,
@@ -19,20 +20,21 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Skeleton, SkeletonFileCard } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { re } from "mathjs"
 import { UploadDialog } from "@/components/dialog-upload"
+import FilterButton, { type FilterOptions } from "@/components/filter-files"
 
-interface restaurantFile {
+interface RestaurantFile {
   id: string
   name: string
   size: number
   type: string
   url: string
   createdAt: string
+  documentType: string
 }
 
 interface StorageUsage {
-  files: restaurantFile[]
+  files: RestaurantFile[]
   totalSize: number
   usedStorage: number
   availableStorage: number
@@ -44,12 +46,16 @@ export default function RestaurantFilesPage({
 }: {
   params: { id: string }
 }) {
-  const [files, setFiles] = useState<restaurantFile[]>([])
+  const [files, setFiles] = useState<RestaurantFile[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [fileToDelete, setFileToDelete] = useState<restaurantFile | null>(null)
+  const [fileToDelete, setFileToDelete] = useState<RestaurantFile | null>(null)
   const [usage, setUsage] = useState<StorageUsage | null>(null)
+  const [filters, setFilters] = useState<FilterOptions>({
+    dateRange: { from: undefined, to: undefined },
+    fileTypes: [],
+  })
   const router = useRouter()
   const { toast } = useToast()
 
@@ -75,13 +81,47 @@ export default function RestaurantFilesPage({
     loadFiles()
   }, [loadFiles])
 
-  async function uploadFile({ file, documentType }: { file: File; documentType: string }) {
+  // Get unique document types from files for filter options
+  const availableDocumentTypes = useMemo(() => {
+    if (!files.length) return []
+    return Array.from(new Set(files.map((file) => file.documentType)))
+  }, [files])
 
+  // Apply filters to files
+  const filteredFiles = useMemo(() => {
+    return files.filter((file) => {
+      // Filter by date range
+      if (filters.dateRange.from || filters.dateRange.to) {
+        const fileDate = new Date(file.createdAt)
+
+        if (filters.dateRange.from && fileDate < filters.dateRange.from) {
+          return false
+        }
+
+        if (filters.dateRange.to) {
+          // Set the end of day for the "to" date for inclusive filtering
+          const endDate = new Date(filters.dateRange.to)
+          endDate.setHours(23, 59, 59, 999)
+          if (fileDate > endDate) {
+            return false
+          }
+        }
+      }
+
+      // Filter by file types
+      if (filters.fileTypes.length > 0 && !filters.fileTypes.includes(file.documentType)) {
+        return false
+      }
+
+      return true
+    })
+  }, [files, filters])
+
+  async function uploadFile({ file, documentType }: { file: File; documentType: string }) {
     setUploading(true)
     const formData = new FormData()
-    formData.append("file", file);
-    formData.append("documentType", documentType);
-    
+    formData.append("file", file)
+    formData.append("documentType", documentType)
 
     try {
       const response = await fetch(`/api/restaurants/${params.id}/files`, {
@@ -108,7 +148,7 @@ export default function RestaurantFilesPage({
     }
   }
 
-  async function handleDelete(file: restaurantFile) {
+  async function handleDelete(file: RestaurantFile) {
     setDeleting(true)
     try {
       const response = await fetch(`/api/restaurants/${params.id}/files/${file.id}`, {
@@ -116,13 +156,13 @@ export default function RestaurantFilesPage({
       })
 
       if (!response.ok) throw new Error("Falha ao excluir arquivo")
-      
+
       toast({
         title: "Sucesso",
         description: "Arquivo excluído com sucesso",
       })
 
-      setFiles(files.filter(f => f.id !== file.id))
+      setFiles(files.filter((f) => f.id !== file.id))
     } catch {
       toast({
         variant: "destructive",
@@ -135,16 +175,16 @@ export default function RestaurantFilesPage({
     }
   }
 
+  function handleApplyFilters(newFilters: FilterOptions) {
+    setFilters(newFilters)
+  }
+
   if (loading) {
     return (
       <>
         <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6">
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push(`/conta/restaurants/${params.id}`)}
-            >
+            <Button variant="ghost" size="icon" onClick={() => router.push(`/conta/restaurants/${params.id}`)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <Skeleton variant="title" />
@@ -173,16 +213,19 @@ export default function RestaurantFilesPage({
     <>
       <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push(`/conta/restaurants/${params.id}`)}
-          >
+          <Button variant="ghost" size="icon" onClick={() => router.push(`/conta/restaurants/${params.id}`)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-lg font-semibold md:text-xl">Arquivos do Restaurante</h1>
+          <FilterButton
+            onApplyFilters={handleApplyFilters}
+            availableFileTypes={availableDocumentTypes}
+            defaultFilters={filters}
+          />
         </div>
-        <UploadDialog onUpload={uploadFile} uploading={uploading} />
+        <div className="flex items-center gap-2">          
+          <UploadDialog onUpload={uploadFile} uploading={uploading} />
+        </div>
       </header>
 
       <main className="flex-1 space-y-4 p-4 md:p-6">
@@ -194,22 +237,22 @@ export default function RestaurantFilesPage({
                 {usage.usedStorage.toFixed(2)}MB de {usage.availableStorage}MB
               </span>
             </div>
-            <Progress 
-              value={usage.percentageUsed} 
+            <Progress
+              value={usage.percentageUsed}
               className={cn(
                 "h-2",
-                usage.percentageUsed < 70 ? "bg-[#A3E635]/20 [&>div]:bg-[#A3E635]" : 
-                usage.percentageUsed < 90 ? "bg-yellow-500/20 [&>div]:bg-yellow-500" : 
-                "bg-destructive/20 [&>div]:bg-destructive"
+                usage.percentageUsed < 70
+                  ? "bg-[#A3E635]/20 [&>div]:bg-[#A3E635]"
+                  : usage.percentageUsed < 90
+                    ? "bg-yellow-500/20 [&>div]:bg-yellow-500"
+                    : "bg-destructive/20 [&>div]:bg-destructive",
               )}
             />
             <p className="text-xs text-muted-foreground">
               {usage.percentageUsed < 90 ? (
                 `Você ainda tem ${(usage.availableStorage - usage.usedStorage).toFixed(2)}MB disponíveis`
               ) : (
-                <span className="text-destructive">
-                  Atenção: Seu armazenamento está quase cheio!
-                </span>
+                <span className="text-destructive">Atenção: Seu armazenamento está quase cheio!</span>
               )}
             </p>
           </div>
@@ -223,29 +266,40 @@ export default function RestaurantFilesPage({
             </p>
             <UploadDialog onUpload={uploadFile} uploading={uploading} />
           </div>
+        ) : filteredFiles.length === 0 ? (
+          <div className="rounded-lg border-2 border-dashed p-8 text-center">
+            <h2 className="font-medium">Nenhum arquivo corresponde aos filtros selecionados</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Tente ajustar seus filtros para ver mais resultados</p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() =>
+                setFilters({
+                  dateRange: { from: undefined, to: undefined },
+                  fileTypes: [],
+                })
+              }
+            >
+              Limpar Filtros
+            </Button>
+          </div>
         ) : (
           <div className="space-y-4">
-            {files.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center justify-between rounded-lg border p-4"
-              >
+            {filteredFiles.map((file) => (
+              <div key={file.id} className="flex items-center justify-between rounded-lg border p-4">
                 <div className="flex items-center gap-4">
                   <FileText className="h-8 w-8 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">{file.name}</p>
+                    <p className="font-medium">
+                      {file.name} • <Badge className="bg-lime-300 border border-lime-200">{file.documentType}</Badge>
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB •{" "}
-                      {new Date(file.createdAt).toLocaleDateString('pt-BR')}
+                      {(file.size / 1024 / 1024).toFixed(2)} MB • {new Date(file.createdAt).toLocaleDateString("pt-BR")}
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => window.open(file.url, "_blank")}
-                  >
+                  <Button variant="ghost" size="icon" onClick={() => window.open(file.url, "_blank")}>
                     <FileText className="h-4 w-4" />
                   </Button>
                   <AlertDialog>
@@ -261,15 +315,11 @@ export default function RestaurantFilesPage({
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle className="text-destructive">
-                          Excluir Arquivo
-                        </AlertDialogTitle>
+                        <AlertDialogTitle className="text-destructive">Excluir Arquivo</AlertDialogTitle>
                         <AlertDialogDescription>
                           Tem certeza que deseja excluir o arquivo{" "}
-                          <span className="font-semibold text-destructive">
-                            {fileToDelete?.name}
-                          </span>
-                          ? Esta ação não pode ser desfeita.
+                          <span className="font-semibold text-destructive">{fileToDelete?.name}</span>? Esta ação não
+                          pode ser desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -305,3 +355,4 @@ export default function RestaurantFilesPage({
     </>
   )
 }
+

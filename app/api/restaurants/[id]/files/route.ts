@@ -75,6 +75,8 @@ export async function GET(
       },
       take: limit,
     })
+    
+    console.log(files[0])
 
     const usage = {
       files,

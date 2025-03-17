@@ -143,6 +143,7 @@ export function UploadDialog({ onUpload, uploading }: UploadDialogProps) {
             </div>
           )}
         </div>
+        
         <DialogFooter className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
           <div className="text-sm text-muted-foreground">
             Não sabe qual tipo de documento anexar?{" "}
