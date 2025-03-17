@@ -1,41 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id              String    @id @default(cuid())
-  name            String?
-  email           String    @unique
-  password        String
-  role            String    @default("user")
-  emailVerified   DateTime?
+  id               String       @id @default(cuid())
+  name             String?
+  email            String       @unique
+  password         String
+  role             String       @default("user")
+  emailVerified    DateTime?
   verificationCode String?
-  resetToken      String?
+  codeExpiresAt    DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  resetToken       String?
   resetTokenExpiry DateTime?
-  codeExpiresAt   DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  // Relação com restaurantes
-  restaurants     restaurant[]
+  restaurants      restaurant[]
 }
 
 model restaurant {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   name      String
   cnpj      String
   address   String?
   phone     String?
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id])
   files     restaurantFile[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }
@@ -47,9 +45,10 @@ model restaurantFile {
   type         String
   url          String
   restaurantId String
-  restaurant   restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  fileType     String?
+  documentType String?
+  restaurant   restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
   @@index([restaurantId])
 }

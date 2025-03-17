@@ -54,7 +54,7 @@ const FILE_TYPES = [
 ]
 
 interface UploadDialogProps {
-  onUpload: (file: File, selectedType: string) => Promise<void>
+  onUpload: (data: { file: File; documentType: string }) => Promise<void>
   uploading: boolean
 }
 
@@ -90,7 +90,7 @@ export function UploadDialog({ onUpload, uploading }: UploadDialogProps) {
     // Fecha o dialog (opcional)
     setOpen(false)
     // Chama a função de upload que você passou via props
-    await onUpload(file, selectedType)
+    await onUpload({ file, documentType: selectedType })
   }
 
   return (
@@ -143,11 +143,12 @@ export function UploadDialog({ onUpload, uploading }: UploadDialogProps) {
             </div>
           )}
         </div>
+        
         <DialogFooter className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
           <div className="text-sm text-muted-foreground">
             Não sabe qual tipo de documento anexar?{" "}
             <a
-              href="https://exemplo.com/guia-documentos"
+              href="https://docs.google.com/document/d/1nNbh1JRLKvEbYZWk7TKF9dfsvegmDdkE0fEN1Qjltds/edit?tab=t.0"              
               target="_blank"
               rel="noopener noreferrer"
               className="text-lime-600 hover:text-lime-700 hover:underline font-medium"
