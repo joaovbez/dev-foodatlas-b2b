@@ -12,8 +12,10 @@ import {
   Upload,
   Users,
   Wallet,
+  LayoutDashboard,
 } from "lucide-react"
 import { GridPattern } from "@/components/ui/grid-pattern"
+import { cn } from "@/lib/utils"
 
 interface QuickAction {
   title: string
@@ -22,6 +24,10 @@ interface QuickAction {
   href: string
   color: string
   gradient: string
+  badge?: {
+    text: string
+    variant: "default" | "secondary" | "destructive" | "outline" | "success"
+  }
 }
 
 export default function ServicesPage() {
@@ -34,7 +40,11 @@ export default function ServicesPage() {
       icon: Bot,
       href: "/conta/ai/chat",
       color: "text-primary",
-      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800"
+      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
+      badge: {
+        text: "Disponível",
+        variant: "default"
+      }
     },
     {
       title: "Restaurantes",
@@ -42,7 +52,11 @@ export default function ServicesPage() {
       icon: Store,
       href: "/conta/restaurants",
       color: "text-primary",
-      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800"
+      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
+      badge: {
+        text: "Disponível",
+        variant: "default"
+      }
     },
     {
       title: "Arquivos",
@@ -50,47 +64,71 @@ export default function ServicesPage() {
       icon: FileSpreadsheet,
       href: "/conta/files",
       color: "text-primary",
-      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800"
-    },
-    {
-      title: "Funcionários",
-      description: "Gerencie sua equipe",
-      icon: Users,
-      href: "/conta/employees",
-      color: "text-primary",
-      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800"
-    },
-    {
-      title: "Financeiro",
-      description: "Acompanhe suas finanças",
-      icon: Wallet,
-      href: "/conta/finance",
-      color: "text-primary",
-      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800"
-    },
-    {
-      title: "Importar Dados",
-      description: "Importe seus dados e planilhas",
-      icon: Upload,
-      href: "/conta/import",
-      color: "text-primary",
-      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800"
+      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
+      badge: {
+        text: "Disponível",
+        variant: "default"
+      }
     },
     {
       title: "Configurações",
       description: "Configure sua conta",
       icon: Settings,
-      href: "/conta/settings",
+      href: "#",
       color: "text-primary",
-      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800"
+      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
+      badge: {
+        text: "Disponível",
+        variant: "default"
+      }
     },
+    {
+      title: "Funcionários",
+      description: "Gerencie sua equipe",
+      icon: Users,
+      href: "#",
+      color: "text-primary",
+      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
+      badge: {
+        text: "Em breve",
+        variant: "destructive"
+      }
+    },
+      {
+      title: "Financeiro",
+      description: "Acompanhe suas finanças",
+      icon: Wallet,
+      href: "#",
+      color: "text-primary",
+      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
+      badge: {
+        text: "Em breve",
+        variant: "destructive"
+      }
+    },  
+      {
+      title: "Dashboard",
+      description: "escrever descrição dashboard",
+      icon: LayoutDashboard,
+      href: "#",
+      color: "text-primary",
+      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
+      badge: {
+        text: "Em breve",
+        variant: "destructive"
+      }
+    },  
     {
       title: "Premium",
       description: "Conheça nossos planos premium",
       icon: Sparkles,
       href: "/conta/premium",
       color: "text-primary",
-      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800"
+      gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
+      badge: {
+        text: "Em breve",
+        variant: "destructive"
+      }
     },
   ]
 
@@ -126,8 +164,24 @@ export default function ServicesPage() {
               onClick={() => router.push(action.href)}
             >
               <div className="flex flex-col gap-2">
-                <div className={`${action.color} p-2 w-fit rounded-lg bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm`}>
-                  <action.icon className="w-6 h-6" />
+                <div className="flex items-center justify-between">
+                  <div className={`${action.color} p-2 w-fit rounded-lg bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm`}>
+                    <action.icon className="w-6 h-6" />
+                  </div>
+                  {action.badge && (
+                    <span className={cn(
+                      "px-2 py-1 text-xs font-medium rounded-full",
+                      {
+                        "bg-primary text-primary-foreground": action.badge.variant === "default",
+                        "bg-secondary text-secondary-foreground": action.badge.variant === "secondary",
+                        "bg-destructive text-destructive-foreground": action.badge.variant === "destructive",
+                        "border border-input bg-background hover:bg-accent hover:text-accent-foreground": action.badge.variant === "outline",
+                        "bg-green-500 text-white": action.badge.variant === "success",
+                      }
+                    )}>
+                      {action.badge.text}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">{action.title}</h2>
