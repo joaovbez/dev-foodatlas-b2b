@@ -74,7 +74,7 @@ export default function ServicesPage() {
       title: "Configurações",
       description: "Configure sua conta",
       icon: Settings,
-      href: "#",
+      href: "/conta/settings",
       color: "text-primary",
       gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
       badge: {
@@ -122,7 +122,7 @@ export default function ServicesPage() {
       title: "Premium",
       description: "Conheça nossos planos premium",
       icon: Sparkles,
-      href: "/conta/premium",
+      href: "#",
       color: "text-primary",
       gradient: "from-zinc-100 to-zinc-50 dark:from-zinc-900 dark:to-zinc-800",
       badge: {
