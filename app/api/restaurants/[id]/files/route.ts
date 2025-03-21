@@ -194,8 +194,6 @@ export async function POST(
           fs.writeFileSync(tempFilePath, fileBuffer);
           await Embeddings(file, ext, tempFilePath, restaurant.id, fileRecord.id)
           fs.unlinkSync(tempFilePath);           
-          
-          
 
         } catch (error) {
           console.error("Erro ao salvar arquivo:", error)

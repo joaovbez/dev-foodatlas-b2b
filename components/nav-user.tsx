@@ -121,7 +121,7 @@ export function NavUser({ user, children }: NavUserProps) {
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <BadgeCheck />
-                <Link href="/conta"> Conta </Link>
+                <Link href="/conta/settings"> Conta </Link>
               </DropdownMenuItem>              
               <DropdownMenuItem>
                 <Bell />
