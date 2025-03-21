@@ -55,7 +55,7 @@ export default function AIChatPage() {
       icon: "📊",
       title: "Análise de Vendas",
       questions: [
-        "Qual foi o produto mais vendido na última semana?",
+        "Qual é o método de pagamento mais utilizado?",
         "Qual é o ticket médio do restaurante?",
       ]
     },
@@ -71,8 +71,8 @@ export default function AIChatPage() {
       icon: "💰",
       title: "Análise Financeira",
       questions: [
-        "Qual categoria de produtos tem melhor margem de lucro?",
-        "Quais produtos têm baixa rotatividade?",
+        "Qual categoria de produtos tem melhor receita?",
+        "Quais produtos têm as menores adesões?",
       ]
     }
   ]

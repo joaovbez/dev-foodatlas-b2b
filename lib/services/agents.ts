@@ -25,18 +25,14 @@ export async function AGENT_Text_to_SQL(query: string, tableInfo: string, table_
     ${tableInfo}
 
     
-    ## Instrução sobre Datas:
-    -  Sempre checar se há alguma coluna de data/período na tabela** (por exemplo, "data_criacao", "created_at", "date", "transaction_date", "order_date", etc.).  
-        - Caso exista, inclua no resultado da query o **período abrangido** usando "MIN(sua_coluna_de_data)" e "MAX(sua_coluna_de_data)", junto dos dados que respondem a pergunta do usuário.  
-        - Caso não exista nenhuma coluna que mencione datas na tabela, não invente nem inclua datas na consulta. 
-
+    
     ## Instruções para construir sua consulta SQL:
     - Use a sintaxe padrão e correta do SQL, sem absolutamente nenhum erro.
     - Para se referir aos nomes da colunas no código SQL, use as crases da mesma forma que usa para se referir quando usa FROM.       
     - Inclua apenas as colunas relevantes para a pergunta (a data é importante sempre que estiver disponível). Use os nomes de colunas citados nas informações da tabela.
       e use suas descrições para saber qual utilizar.
-    - Limite o número de resultados a 200 se não especificado de outra forma.
     - Use funções de agregação quando necessário (COUNT, SUM, AVG, etc.) para além de responder o usuário, fornecer insights valiosos para seu restaurante.
+    - Apenas caso não exista nenhuma coluna que mencione datas na tabela, não invente nem inclua datas na consulta. 
     - Use GROUP BY e HAVING conforme apropriado.    
     - Certifique-se de que a consulta seja eficiente e sejá útil para o usuário. Além de responder de forma direta a pergunta do usuário, busque insights em outras colunas.
     - Não alucine ou invente informações.
