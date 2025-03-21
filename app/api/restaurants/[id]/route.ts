@@ -2,7 +2,8 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
-import { deleteRestaurantEmbeddings } from "@/lib/services/big-query"
+import { deleteRestaurantEmbeddings } from "@/lib/services/big-query-operations"
+import { bucket } from "@/lib/google-cloud-storage"
 
 export async function GET(
   req: Request,
@@ -182,27 +183,32 @@ export async function DELETE(
       }
     }
 
-    // Excluir o restaurante do banco de dados SQL
     await prisma.restaurant.delete({
       where: {
         id: params.id,
       },
-    })
+    });
 
-    // Excluir os arquivos relacionados ao restaurante do banco de dados SQL
     await prisma.restaurantFile.deleteMany({
       where: {
         restaurantId: params.id,
       },
-    })
+    });
+
+    // Retornar sucesso após as exclusões no banco SQL
+    const successResponse = new NextResponse(null, { status: 204 });
+
     
-    // Excluir buckets relacionados ao restaurante
-    // falta fazer isso
+    // Excluir arquivos do restaurante no Cloud Storage em background
+    const prefixFolder = `restaurants/${params.id}`;    
+    bucket.deleteFiles({
+      prefix: prefixFolder,
+    });
 
-    // Excluir embeddings dos arquivos relacionados ao restaurante
-    await deleteRestaurantEmbeddings(existingRestaurant.id)
+    // Excluir embeddings dos arquivos relacionados ao restaurante em background
+    deleteRestaurantEmbeddings(existingRestaurant.id);
 
-    return new NextResponse(null, { status: 204 })
+    return successResponse;
   } catch (error) {
     console.error("Erro ao excluir restaurante:", error)
     return new NextResponse("Erro interno", { status: 500 })

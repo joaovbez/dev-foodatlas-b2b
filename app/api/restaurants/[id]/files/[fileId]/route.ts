@@ -3,7 +3,7 @@ import { bucket } from "@/lib/google-cloud-storage"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
-import {deleteFileEmbeddings } from "@/lib/services/big-query"
+import {deleteFileEmbeddings } from "@/lib/services/big-query-operations"
 
 export async function DELETE(
   req: NextRequest,
@@ -46,21 +46,27 @@ export async function DELETE(
       console.error("Não é possível excluir o arquivo antes de 90 minutos após o upload")
       return new NextResponse( "Não é possível excluir o arquivo antes de 90 minutos após o upload", { status: 403 });
     }
-    // Deletar embeddings do BigQuery
-    await deleteFileEmbeddings(file.id, file.restaurantId)
-    console.log("embeddings deletados");
-
-    // Deletar do Google Cloud Storage
-    await bucket.file(filePathMatch[0]).delete()
-
     // Deletar do banco de dados
     await prisma.restaurantFile.delete({
       where: {
         id: file.id,
       },
-    })
+    });
 
-    return new NextResponse(null, { status: 204 })
+    // Retornar resposta de sucesso
+    const response = new NextResponse(null, { status: 204 });
+
+    // Deletar embeddings do BigQuery em background
+    deleteFileEmbeddings(file.id, file.restaurantId)
+      .then(() => console.log("embeddings deletados"))
+      .catch(error => console.error("Erro ao deletar embeddings:", error));
+
+    // Deletar do Google Cloud Storage em background
+    bucket.file(filePathMatch[0]).delete()
+      .then(() => console.log("Arquivo deletado do Google Cloud Storage"))
+      .catch(error => console.error("Erro ao deletar arquivo do Google Cloud Storage:", error));
+
+    return response;
   } catch (error) {
     console.error("Erro ao deletar arquivo:", error)
     return new NextResponse("Erro interno do servidor", { status: 500 })

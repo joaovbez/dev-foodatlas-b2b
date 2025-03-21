@@ -15,6 +15,7 @@
     "@google-cloud/aiplatform": "^3.34.0",
     "@google-cloud/bigquery": "^7.9.2",
     "@google-cloud/storage": "^7.15.0",
+    "@google-cloud/vertexai": "^1.9.3",
     "@hookform/resolvers": "^3.10.0",
     "@langchain/community": "^0.3.31",
     "@langchain/core": "^0.3.40",
@@ -83,6 +84,7 @@
     "prisma": "^6.2.1",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
     "typescript": "^5.7.3"
   }
 }

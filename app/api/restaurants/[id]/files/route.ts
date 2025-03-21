@@ -8,34 +8,51 @@ import path from "path";
 import os from "os";
 import fs from "fs";
 import { generateEmbedding } from "@/lib/services/openAI";
-import { saveEmbedding } from "@/lib/services/big-query";
+import { saveCSVtoSQL, saveEmbedding, saveEmbedding_tabular } from "@/lib/services/big-query-operations";
 import { processTXTFile } from "@/lib/services/chunkerTXT";
 import { processPDFFile } from "@/lib/services/chunkerPDF";
+import { processCSVFile } from "@/lib/services/chunkerCSV";
 
 const STORAGE_LIMIT_MB = 100 
 
-async function Embeddings(file: File, ext: string, tempFilePath: string, restaurantId: string, fileId: string) {
-  
-  let chunks_AND_summary;
-
+async function Embeddings(file: File, pathGSC:string, ext: string, tempFilePath: string, restaurantId: string, fileId: string) {
+    
   if(ext === '.pdf'){
-    chunks_AND_summary = await processPDFFile(tempFilePath);  
+    let chunks_AND_summary = await processPDFFile(tempFilePath);  
+    let chunks = chunks_AND_summary?.semanticChunks;
+    let summary = chunks_AND_summary?.summary;
+    if(chunks)
+      for (const chunk of chunks) {
+        const embedding = await generateEmbedding(chunk);
+        console.log("Embeddding Gerado");
+        await saveEmbedding(fileId, restaurantId, chunk, embedding, summary);
+        console.log("Embedding Armazenado");
+    }
   } else if (ext === '.csv'){
-    // chunks = await processCSVFile(file, ext);  
+    const file_description = await processCSVFile(tempFilePath);
+    if(file_description){
+      const embedding = await generateEmbedding(file_description);
+      console.log("Embeddding Gerado");
+      await saveEmbedding_tabular(fileId, restaurantId, file_description, embedding);
+      console.log("Embedding Armazenado");
+      console.log("Criando tabela no BigQuery")
+      await saveCSVtoSQL(pathGSC, fileId);  
+      console.log("Tabela criada no BigQuery")    
+    }
   } else if (ext === '.txt'){
-    chunks_AND_summary = await processTXTFile(tempFilePath);
+    let chunks_AND_summary = await processTXTFile(tempFilePath);
+    let chunks = chunks_AND_summary?.semanticChunks;
+    let summary = chunks_AND_summary?.summary;
+    if(chunks)
+      for (const chunk of chunks) {
+        const embedding = await generateEmbedding(chunk);
+        console.log("Embeddding Gerado");
+        await saveEmbedding(fileId, restaurantId, chunk, embedding, summary);
+        console.log("Embedding Armazenado");
+    }
   } 
   
-  let chunks = chunks_AND_summary?.semanticChunks;
-  let summary = chunks_AND_summary?.summary;
-
-  if(chunks)
-    for (const chunk of chunks) {
-      const embedding = await generateEmbedding(chunk);
-      console.log("Embeddding Gerado");
-      await saveEmbedding(fileId, restaurantId, chunk, embedding, summary);
-      console.log("Embedding Armazenado");
-    }
+  
 
 }
 
@@ -149,8 +166,8 @@ export async function POST(
 
     const sanitizedDocumentType = documentType.trim().toLowerCase().replace(/\s+/g, '-');
     const fileName = `${restaurant.id}/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${sanitizedDocumentType}/${uuidv4()}-${file.name}`;
-        
-    const blob = bucket.file(`restaurants/${fileName}`)
+    const pathGCS = `restaurants/${fileName}`;
+    const blob = bucket.file(pathGCS);
     
     return new Promise((resolve, reject) => {
       const blobStream = blob.createWriteStream({
@@ -192,7 +209,7 @@ export async function POST(
           const ext = path.extname(file.name).toLowerCase();
           
           fs.writeFileSync(tempFilePath, fileBuffer);
-          await Embeddings(file, ext, tempFilePath, restaurant.id, fileRecord.id)
+          await Embeddings(file, pathGCS, ext, tempFilePath, restaurant.id, fileRecord.id)
           fs.unlinkSync(tempFilePath);           
           
           
