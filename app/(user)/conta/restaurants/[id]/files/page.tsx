@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, ArrowLeft, FileText, Trash2 } from "lucide-react"
@@ -41,11 +41,9 @@ interface StorageUsage {
   percentageUsed: number
 }
 
-export default function RestaurantFilesPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default function RestaurantFilesPage() {
+  // Use o hook para acessar os parâmetros da rota
+  const { id } = useParams() as { id: string }
   const [files, setFiles] = useState<RestaurantFile[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -61,7 +59,7 @@ export default function RestaurantFilesPage({
 
   const loadFiles = useCallback(async () => {
     try {
-      const response = await fetch(`/api/restaurants/${params.id}/files`)
+      const response = await fetch(`/api/restaurants/${id}/files`)
       if (!response.ok) throw new Error("Falha ao carregar arquivos")
       const data = await response.json()
       setFiles(data.files)
@@ -75,7 +73,7 @@ export default function RestaurantFilesPage({
     } finally {
       setLoading(false)
     }
-  }, [params.id, toast])
+  }, [id, toast])
 
   useEffect(() => {
     loadFiles()
@@ -87,7 +85,6 @@ export default function RestaurantFilesPage({
     return Array.from(new Set(files.map((file) => file.documentType)))
   }, [files])
 
-  
   const filteredFiles = useMemo(() => {
     return files.filter((file) => {
       // Filtrar pela data
@@ -123,7 +120,7 @@ export default function RestaurantFilesPage({
     formData.append("documentType", documentType)
 
     try {
-      const response = await fetch(`/api/restaurants/${params.id}/files`, {
+      const response = await fetch(`/api/restaurants/${id}/files`, {
         method: "POST",
         body: formData,
       })
@@ -150,7 +147,7 @@ export default function RestaurantFilesPage({
   async function handleDelete(file: RestaurantFile) {
     setDeleting(true)
     try {
-      const response = await fetch(`/api/restaurants/${params.id}/files/${file.id}`, {
+      const response = await fetch(`/api/restaurants/${id}/files/${file.id}`, {
         method: "DELETE",
       })
 
@@ -183,7 +180,7 @@ export default function RestaurantFilesPage({
       <>
         <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => router.push(`/conta/restaurants/${params.id}`)}>
+            <Button variant="ghost" size="icon" onClick={() => router.push(`/conta/restaurants/${id}`)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <Skeleton variant="title" />
@@ -212,7 +209,7 @@ export default function RestaurantFilesPage({
     <>
       <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 md:px-6">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => router.push(`/conta/restaurants/${params.id}`)}>
+          <Button variant="ghost" size="icon" onClick={() => router.push(`/conta/restaurants/${id}`)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-lg font-semibold md:text-xl">Arquivos do Restaurante</h1>
@@ -222,7 +219,7 @@ export default function RestaurantFilesPage({
             defaultFilters={filters}
           />
         </div>
-        <div className="flex items-center gap-2">          
+        <div className="flex items-center gap-2">
           <UploadDialog onUpload={uploadFile} uploading={uploading} />
         </div>
       </header>
@@ -354,4 +351,3 @@ export default function RestaurantFilesPage({
     </>
   )
 }
-
