@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
-import { BarChartMock } from "@/components/barchartmock"
+import { DynamicBarChart } from "@/components/barchartmock"
 import ReactMarkdown from 'react-markdown'
 
 interface Restaurant {
@@ -26,12 +26,24 @@ interface Restaurant {
   cnpj: string
 }
 
+interface ChartData {
+  title: string;
+  subtitle: string;
+  data: any[];
+  dataKey: string;
+  xAxisKey: string;
+  insight?: string;
+  trendDirection?: "up" | "down" | "neutral";
+  trendValue?: string;
+  footer?: string;
+}
+
 interface Message {
   id: string;
   content: string;
   role: 'assistant' | 'user';
   timestamp: Date;
-  chart?: boolean; // se true, exibir gráfico
+  chartData?: ChartData[]; // Replace boolean with actual chart data
 }
 
 export default function AIChatPage() {
@@ -115,34 +127,6 @@ export default function AIChatPage() {
     e.preventDefault();
     if (!message.trim() || !selectedRestaurant) return;
     
-    const lowerMessage = message.toLowerCase();
-    if (lowerMessage.includes("gráfico") || lowerMessage.includes("chart")) {
-      // 1. Cria mensagem do usuário
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        content: message,
-        role: "user",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, userMessage]);
-      setMessage("");
-  
-      // 2. Ativa animação de digitação e, após 3 segundos, exibe o gráfico mock
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        const chartMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: "",
-          role: "assistant",
-          timestamp: new Date(),
-          chart: true,
-        }
-        setMessages((prev) => [...prev, chartMessage]);
-      }, 3000);
-      return;
-    }
-    
     setIsTyping(true);
     try {
       // Mensagem do usuário
@@ -180,6 +164,7 @@ export default function AIChatPage() {
       const decoder = new TextDecoder("utf-8");
       let done = false;
       let finalText = "";
+      let chartData: ChartData[] = [];
       const partialAssistantMsgId = "assistant-stream";
       setMessages(prev => [
         ...prev,
@@ -196,14 +181,31 @@ export default function AIChatPage() {
         done = doneReading;
         if (value) {
           const chunkValue = decoder.decode(value);
-          finalText += chunkValue;
+          
+          // Check if the chunk contains chart data
+          const chartDataMatch = chunkValue.match(/\[CHART_DATA_JSON\]([\s\S]*?)\[\/CHART_DATA_JSON\]/);
+          if (chartDataMatch && chartDataMatch[1]) {
+            try {
+              chartData = JSON.parse(chartDataMatch[1]);
+              // Remove the chart data marker from the content
+              const cleanedChunk = chunkValue.replace(/\[CHART_DATA_JSON\]([\s\S]*?)\[\/CHART_DATA_JSON\]/, '');
+              finalText += cleanedChunk;
+            } catch (error) {
+              console.error("Error parsing chart data from stream:", error);
+              finalText += chunkValue;
+            }
+          } else {
+            finalText += chunkValue;
+          }
+          
+          // Update the streaming message with current text content only (no charts)
           setMessages(prev => {
             const updated = [...prev];
             const index = updated.findIndex((m) => m.id === partialAssistantMsgId);
             if (index !== -1) {
               updated[index] = {
                 ...updated[index],
-                content: updated[index].content + chunkValue,
+                content: finalText
               }
             }
             return updated;
@@ -211,14 +213,29 @@ export default function AIChatPage() {
         }
       }
   
+      // Finalize message - replace streaming message with final version
       setMessages(prev => {
         const updated = prev.filter((m) => m.id !== partialAssistantMsgId);
+        
+        // Add text message
         updated.push({
-          id: (Date.now() + 1).toString(),
+          id: (Date.now()).toString(),
           content: finalText,
           role: "assistant",
           timestamp: new Date()
         });
+        
+        // Add chart message separately if charts exist
+        if (chartData.length > 0) {
+          updated.push({
+            id: (Date.now() + 1).toString(),
+            content: "",
+            role: "assistant",
+            timestamp: new Date(),
+            chartData: chartData
+          });
+        }
+        
         return updated;
       });
   
@@ -410,11 +427,28 @@ export default function AIChatPage() {
                             : "bg-primary text-primary-foreground"
                         }`}
                       >
-                        {msg.chart ? (
-                          <div className="text-sm">
-                            <BarChartMock />
+                        {/* If it's a chart-only message */}
+                        {msg.chartData && msg.chartData.length > 0 && !msg.content && (
+                          <div className="text-sm space-y-4">
+                            {msg.chartData.map((chartItem, index) => (
+                              <DynamicBarChart 
+                                key={index}
+                                title={chartItem.title}
+                                subtitle={chartItem.subtitle}
+                                data={chartItem.data}
+                                dataKey={chartItem.dataKey}
+                                xAxisKey={chartItem.xAxisKey}
+                                insight={chartItem.insight}
+                                trendDirection={chartItem.trendDirection}
+                                trendValue={chartItem.trendValue}
+                                footer={chartItem.footer}
+                              />
+                            ))}
                           </div>
-                        ) : (
+                        )}
+                        
+                        {/* For text messages (with or without charts) */}
+                        {msg.content && (
                           <ReactMarkdown
                             components={{
                               h1: ({...props }) => <h1 className="text-2xl font-bold my-2" {...props} />,
@@ -442,10 +476,15 @@ export default function AIChatPage() {
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <Bot className="w-5 h-5 text-primary animate-pulse" />
                     </div>
-                    <div className="bg-muted/50 rounded-lg p-3 flex items-center gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+                    <div className="bg-muted/50 rounded-lg p-3">
+                      <div className="mb-2 text-sm text-muted-foreground">
+                        Estou pensando na melhor solução...
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+                      </div>
                     </div>
                   </div>
                 )}

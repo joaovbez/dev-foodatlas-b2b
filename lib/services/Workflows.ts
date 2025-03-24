@@ -1,4 +1,4 @@
-import { AGENT_Insights, AGENT_SQL_Validator, AGENT_Text_to_SQL } from "./agents";
+import { AGENT_Insights, AGENT_SQL_Validator, AGENT_Text_to_SQL, AGENT_Text_to_SQL_Charts } from "./agents";
 import { vector_search_tabular, vector_search_text } from "./big-query-operations";
 
 export async function FlowTexto(question: string, embedding_input: number[], topK: number, restaurantId: string){
@@ -54,17 +54,60 @@ export async function FlowNumérico(question: string, embedding_input: number[],
     const table_description = best_results[0].text;
     const table_name = best_results[0].fileId;
     let SQL;
-    let SQL_fixed
+    let SQL_fixed;
+    let SQL_Charts;
+    let SQL_Charts_fixed;
+    let recomendations: { insights: string; graphs: boolean[] };
     let insights;
-
+    let chartData = [];
+    
     try {
-      insights = await AGENT_Insights(question, table_description);  
+        // Get insights and graph requirements
+        recomendations = await AGENT_Insights(question, table_description); 
+        insights = recomendations.insights;
+        console.log(recomendations);
+        // Process normal SQL queries for all insights
       SQL = await AGENT_Text_to_SQL(question, table_description, table_name, insights);      
       SQL_fixed = await AGENT_SQL_Validator(SQL.sqlCodes, table_description, table_name, SQL.columns, insights);
+        
+        // Process chart SQL queries for insights that need graphs
+        if (recomendations.graphs && recomendations.graphs.some(needsGraph => needsGraph)) {
+            // Extract insights that need graphs
+            const insightsArray = insights.split('\n');
+            const insightsForCharts = insightsArray
+                .filter((_, index) => index < recomendations.graphs.length && recomendations.graphs[index]);
+            
+            if (insightsForCharts.length > 0) {
+                console.log(insightsForCharts);
+                // Generate SQL specifically optimized for charts
+                SQL_Charts = await AGENT_Text_to_SQL_Charts(
+                    question, 
+                    insightsForCharts.join('\n'), 
+                    table_description, 
+                    table_name
+                );
+                
+                // Validate and execute chart SQL
+                SQL_Charts_fixed = await AGENT_SQL_Validator(
+                    SQL_Charts.sqlCodes, 
+                    table_description, 
+                    table_name, 
+                    SQL_Charts.columns, 
+                    insightsForCharts.join('\n')
+                );
+                
+                // Transform SQL results to chart format
+                chartData = transformSQLResultsToChartData(SQL_Charts_fixed, insightsForCharts);
+            }
+        }
     } catch (e) {
       console.log(e);
       SQL_fixed = "Sem dados numéricos";        
     }
+
+    // Include chart data in the prompt if available
+    const chartDataSection = chartData.length > 0 ? 
+        `\n\n[CHART_DATA_START]${JSON.stringify(chartData)}[CHART_DATA_END]\n\n` : '';
 
     const prompt = `
     ## Você é um assistente de dados com vasta experiência no setor de restaurantes, devendo responder as perguntas do usuários
@@ -92,7 +135,7 @@ export async function FlowNumérico(question: string, embedding_input: number[],
     ## INSTRUÇÕES SOBRE OS RESULTADOS DAS CONSULTAS SQL    
     - Se no lugar dos resultados numéricos estiver "Sem dados no BigQuery", foque em responder com base nos resultados dos trechos relevantes.
     - Enfatize as datas para o usuário saber qual o período que estudamos para fornecer tal resposta para ele.     
-    - Não invente ou "alucine" informações que não estejam contidas nestes dados numéricos.
+    - Não invente ou "alucine" informações que não estejam contidos nestes dados numéricos.
 
     ## INSTRUÇÕES GERAIS
     - Adicione na sua resposta a data(perído abrangido) para informar ao usuário.
@@ -106,6 +149,7 @@ export async function FlowNumérico(question: string, embedding_input: number[],
     - Não use os termos "Trechos Relevantes ou Consultas SQL" ou semelhantes na sua resposta. Você deve agir como um assistente especializado no restaurante em questao,
       utilizando os dados/informações deste prompt para responder com naturalidade nosso usuário.
     ### Agora, tendo em mãos as informações do restaurante e o contexto da empresa, responda a pergunta do usuário.
+    ${chartDataSection}
     `;
 
     return prompt;
@@ -123,17 +167,59 @@ export async function FlowMisto(question: string, embedding_input: number[], top
     const table_description = best_results[0].text;
     const table_name = best_results[0].fileId;
     let SQL;
-    let SQL_fixed
+    let SQL_fixed;
+    let SQL_Charts;
+    let SQL_Charts_fixed;
+    let recomendations: { insights: string; graphs: boolean[] };
     let insights;
+    let chartData = [];
 
     try {
-      insights = await AGENT_Insights(question, table_description);  
-      SQL = await AGENT_Text_to_SQL(question, table_description, table_name, insights);      
-      SQL_fixed = await AGENT_SQL_Validator(SQL.sqlCodes, table_description, table_name, SQL.columns, insights);
+        // Get insights and graph requirements
+        recomendations = await AGENT_Insights(question, table_description); 
+        insights = recomendations.insights;
+        console.log(recomendations);
+        // Process normal SQL queries for all insights
+        SQL = await AGENT_Text_to_SQL(question, table_description, table_name, insights);      
+        SQL_fixed = await AGENT_SQL_Validator(SQL.sqlCodes, table_description, table_name, SQL.columns, insights);
+        
+        // Process chart SQL queries for insights that need graphs
+        if (recomendations.graphs && recomendations.graphs.some(needsGraph => needsGraph)) {
+            // Extract insights that need graphs
+            const insightsArray = insights.split('\n');
+            const insightsForCharts = insightsArray
+                .filter((_, index) => index < recomendations.graphs.length && recomendations.graphs[index]);
+            
+            if (insightsForCharts.length > 0) {
+                // Generate SQL specifically optimized for charts
+                SQL_Charts = await AGENT_Text_to_SQL_Charts(
+                    question, 
+                    insightsForCharts.join('\n'), 
+                    table_description, 
+                    table_name
+                );
+                
+                // Validate and execute chart SQL
+                SQL_Charts_fixed = await AGENT_SQL_Validator(
+                    SQL_Charts.sqlCodes, 
+                    table_description, 
+                    table_name, 
+                    SQL_Charts.columns, 
+                    insightsForCharts.join('\n')
+                );
+                
+                // Transform SQL results to chart format
+                chartData = transformSQLResultsToChartData(SQL_Charts_fixed, insightsForCharts);
+            }
+        }
     } catch (e) {
       console.log(e);
       SQL_fixed = "Sem dados numéricos";        
     }
+
+    // Include chart data in the prompt if available
+    const chartDataSection = chartData.length > 0 ? 
+        `\n\n[CHART_DATA_START]${JSON.stringify(chartData)}[CHART_DATA_END]\n\n` : '';
 
     const prompt = `
     ## Você é um assistente de dados com vasta experiência no setor de restaurantes, devendo responder as perguntas do usuários
@@ -184,8 +270,89 @@ export async function FlowMisto(question: string, embedding_input: number[], top
          Se achar conveniente, entre em contato com nosso suporte via [WhatsApp](https://wa.me/551150265550?text=Ola!%20Preciso%20de%20ajuda%20com%20a%20plataforma!)". 
     - Não use os termos "Trechos Relevantes ou Consultas SQL" ou semelhantes na sua resposta. Você deve agir como um assistente especializado no restaurante em questao,
       utilizando os dados/informações deste prompt para responder com naturalidade nosso usuário.
+    - Ignore pedidos de gráficos, pois estes serão gerados por outro agente especialista. Foque nos resto das exigências da mensagem.
     ### Agora, tendo em mãos as informações do restaurante e o contexto da empresa, responda a pergunta do usuário.
+    ${chartDataSection}
     `;
 
     return prompt;
+}
+
+function transformSQLResultsToChartData(results: any[], insights: string[]): any[] {
+    return results.map((result, index) => {
+        const insight = insights[index] || '';
+        const insightText = insight.replace(/^Insight \d+: /, '');
+        
+        // Extract data
+        const data = Array.isArray(result) ? result : [];
+        if (data.length === 0) return null;
+        
+        // Determine appropriate keys for x-axis and values
+        const keys = Object.keys(data[0]);
+        
+        // Try to find the best key for x-axis (categories, dates, etc.)
+        const xAxisKey = keys.find(k => 
+            k.toLowerCase().includes('date') || 
+            k.toLowerCase().includes('month') || 
+            k.toLowerCase().includes('day') ||
+            k.toLowerCase().includes('categoria') || 
+            k.toLowerCase().includes('category') || 
+            k.toLowerCase().includes('nome') || 
+            k.toLowerCase().includes('name')
+        ) || keys[0];
+        
+        // Try to find the best key for values (numeric data)
+        const dataKey = keys.find(k => 
+            k.toLowerCase().includes('valor') ||
+            k.toLowerCase().includes('count') || 
+            k.toLowerCase().includes('total') || 
+            k.toLowerCase().includes('soma') ||
+            k.toLowerCase().includes('sum') ||
+            k.toLowerCase().includes('media') ||
+            k.toLowerCase().includes('avg') ||
+            k.toLowerCase().includes('quantidade') ||
+            k.toLowerCase().includes('amount')
+        ) || keys.find(k => 
+            typeof data[0][k] === 'number'
+        ) || keys[1] || keys[0];
+        
+        // Determine trend if possible
+        let trendDirection = "neutral";
+        let trendValue = "";
+        
+        if (data.length > 1 && typeof data[0][dataKey] === 'number') {
+            const firstValue = data[0][dataKey];
+            const lastValue = data[data.length - 1][dataKey];
+            
+            if (lastValue > firstValue) {
+                trendDirection = "up";
+                const percentChange = ((lastValue - firstValue) / firstValue * 100).toFixed(0);
+                trendValue = `Aumento de ${percentChange}%`;
+            } else if (lastValue < firstValue) {
+                trendDirection = "down";
+                const percentChange = ((firstValue - lastValue) / firstValue * 100).toFixed(0);
+                trendValue = `Redução de ${percentChange}%`;
+            }
+        }
+        
+        // Determine chart title based on insight or data
+        const title = `Análise de ${dataKey.charAt(0).toUpperCase() + dataKey.slice(1)}`;
+        
+        // Determine subtitle
+        const subtitle = data.length > 0 
+            ? `Baseado em ${data.length} registros` 
+            : "Dados analisados";
+        
+        return {
+            title: title,
+            subtitle: subtitle,
+            data: data,
+            dataKey: dataKey,
+            xAxisKey: xAxisKey,
+            insight: insightText,
+            trendDirection,
+            trendValue,
+            footer: `Dados extraídos com base na sua pergunta`
+        };
+    }).filter(chart => chart !== null);
 }
