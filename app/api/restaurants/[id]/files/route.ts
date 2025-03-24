@@ -15,7 +15,7 @@ import { processCSVFile } from "@/lib/services/chunkerCSV";
 
 const STORAGE_LIMIT_MB = 100 
 
-async function Embeddings(file: File, pathGSC:string, ext: string, tempFilePath: string, restaurantId: string, fileId: string) {
+async function Embeddings(pathGSC:string, ext: string, tempFilePath: string, restaurantId: string, fileId: string) {
     
   if(ext === '.pdf'){
     let chunks_AND_summary = await processPDFFile(tempFilePath);  
@@ -24,20 +24,14 @@ async function Embeddings(file: File, pathGSC:string, ext: string, tempFilePath:
     if(chunks)
       for (const chunk of chunks) {
         const embedding = await generateEmbedding(chunk);
-        console.log("Embeddding Gerado");
         await saveEmbedding(fileId, restaurantId, chunk, embedding, summary);
-        console.log("Embedding Armazenado");
     }
   } else if (ext === '.csv'){
     const file_description = await processCSVFile(tempFilePath);
     if(file_description){
       const embedding = await generateEmbedding(file_description);
-      console.log("Embeddding Gerado");
       await saveEmbedding_tabular(fileId, restaurantId, file_description, embedding);
-      console.log("Embedding Armazenado");
-      console.log("Criando tabela no BigQuery")
       await saveCSVtoSQL(pathGSC, fileId);  
-      console.log("Tabela criada no BigQuery")    
     }
   } else if (ext === '.txt'){
     let chunks_AND_summary = await processTXTFile(tempFilePath);
@@ -46,14 +40,9 @@ async function Embeddings(file: File, pathGSC:string, ext: string, tempFilePath:
     if(chunks)
       for (const chunk of chunks) {
         const embedding = await generateEmbedding(chunk);
-        console.log("Embeddding Gerado");
         await saveEmbedding(fileId, restaurantId, chunk, embedding, summary);
-        console.log("Embedding Armazenado");
     }
   } 
-  
-  
-
 }
 
 export async function GET(
@@ -209,7 +198,7 @@ export async function POST(
           const ext = path.extname(file.name).toLowerCase();
           
           fs.writeFileSync(tempFilePath, fileBuffer);
-          await Embeddings(file, pathGCS, ext, tempFilePath, restaurant.id, fileRecord.id)
+          await Embeddings(pathGCS, ext, tempFilePath, restaurant.id, fileRecord.id)
           fs.unlinkSync(tempFilePath);           
           
           

@@ -62,7 +62,7 @@ throw err;
 }
 }
 
-export async function saveCSVtoSQL(pathGCS: string, fileId: string){
+export async function saveCSVtoSQL(pathGCS: string, fileId: string) {
   const datasetId = process.env.GOOGLE_DATASET_SQL;       
   const tableId = fileId;           
   const gcsUri = [pathGCS]; 
@@ -88,8 +88,7 @@ export async function saveCSVtoSQL(pathGCS: string, fileId: string){
       console.error('Erros no job:', job.status.errors);
       return;
     }
-
-    console.log(`Tabela ${tableId} criada e carregada a partir de ${gcsUri}`);
+    console.log(`Tabela ${tableId} criada e carregada a partir de ${gcsUri}`);    
   } catch (error) {
     console.error('Erro ao criar a tabela:', error);
   }
