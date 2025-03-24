@@ -16,7 +16,7 @@ export async function POST(
       return NextResponse.json({ error: "Pergunta é obrigatória." }, { status: 400 });
     }
   
-    const restaurantId = params.id;
+    const restaurantId = (await params).id
 
     const embedding_input = await generateEmbedding(question);
 
