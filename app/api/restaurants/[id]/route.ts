@@ -190,7 +190,6 @@ export async function DELETE(
         id,
       },
     });
-    });
 
     await prisma.restaurantFile.deleteMany({
       where: {
@@ -203,7 +202,7 @@ export async function DELETE(
 
     
     // Excluir arquivos do restaurante no Cloud Storage em background
-    const prefixFolder = `restaurants/${params.id}`;    
+    const prefixFolder = `restaurants/${id}`;    
     bucket.deleteFiles({
       prefix: prefixFolder,
     });

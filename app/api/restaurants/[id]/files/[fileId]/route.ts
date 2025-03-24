@@ -55,7 +55,6 @@ export async function DELETE(
         id: file.id,
       },
     });
-    });
 
     // Retornar resposta de sucesso
     const response = new NextResponse(null, { status: 204 });
