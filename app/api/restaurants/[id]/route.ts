@@ -7,12 +7,13 @@ import { bucket } from "@/lib/google-cloud-storage"
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return new NextResponse("Não autorizado", { status: 401 })
+      return new NextResponse("Não autorizado", { status: 401 });
     }
 
     // Buscar o usuário completo
@@ -20,39 +21,40 @@ export async function GET(
       where: {
         email: session.user.email!
       }
-    })
+    });
 
     if (!user) {
-      return new NextResponse("Usuário não encontrado", { status: 404 })
+      return new NextResponse("Usuário não encontrado", { status: 404 });
     }
 
     // Buscar o restaurante garantindo que pertence ao usuário
     const restaurant = await prisma.restaurant.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: user.id,
       },
-    })
+    });
 
     if (!restaurant) {
-      return new NextResponse("Restaurante não encontrado", { status: 404 })
+      return new NextResponse("Restaurante não encontrado", { status: 404 });
     }
 
-    return NextResponse.json(restaurant)
+    return NextResponse.json(restaurant);
   } catch (error) {
-    console.error("Erro ao buscar restaurante:", error)
-    return new NextResponse("Erro interno", { status: 500 })
+    console.error("Erro ao buscar restaurante:", error);
+    return new NextResponse("Erro interno", { status: 500 });
   }
 }
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return new NextResponse("Não autorizado", { status: 401 })
+      return new NextResponse("Não autorizado", { status: 401 });
     }
 
     // Buscar o usuário completo
@@ -60,29 +62,29 @@ export async function PATCH(
       where: {
         email: session.user.email!
       }
-    })
+    });
 
     if (!user) {
-      return new NextResponse("Usuário não encontrado", { status: 404 })
+      return new NextResponse("Usuário não encontrado", { status: 404 });
     }
 
-    const body = await req.json()
-    const { name, cnpj, address, phone } = body
+    const body = await req.json();
+    const { name, cnpj, address, phone } = body;
 
     if (!name || !cnpj) {
-      return new NextResponse("Nome e CNPJ são obrigatórios", { status: 400 })
+      return new NextResponse("Nome e CNPJ são obrigatórios", { status: 400 });
     }
 
     // Verificar se o restaurante existe e pertence ao usuário
     const existingRestaurant = await prisma.restaurant.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: user.id,
       },
-    })
+    });
 
     if (!existingRestaurant) {
-      return new NextResponse("Restaurante não encontrado", { status: 404 })
+      return new NextResponse("Restaurante não encontrado", { status: 404 });
     }
 
     // Verificar se o novo CNPJ já está em uso (se foi alterado)
@@ -92,20 +94,20 @@ export async function PATCH(
           cnpj,
           userId: user.id,
           NOT: {
-            id: params.id
+            id
           }
         }
-      })
+      });
 
       if (cnpjExists) {
-        return new NextResponse("CNPJ já cadastrado em outro restaurante", { status: 400 })
+        return new NextResponse("CNPJ já cadastrado em outro restaurante", { status: 400 });
       }
     }
 
     // Atualizar o restaurante
     const restaurant = await prisma.restaurant.update({
       where: {
-        id: params.id,
+        id,
       },
       data: {
         name,
@@ -113,27 +115,27 @@ export async function PATCH(
         address: address || null,
         phone: phone || null,
       },
-    })
+    });
 
-    return NextResponse.json(restaurant)
+    return NextResponse.json(restaurant);
   } catch (error) {
-    console.error("Erro ao atualizar restaurante:", error)
+    console.error("Erro ao atualizar restaurante:", error);
     return new NextResponse(
       error instanceof Error ? error.message : "Erro interno do servidor",
       { status: 500 }
-    )
+    );
   }
 }
 
-// Opcional: Adicionar rota DELETE para excluir restaurantes
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return new NextResponse("Não autorizado", { status: 401 })
+      return new NextResponse("Não autorizado", { status: 401 });
     }
 
     // Buscar o usuário completo
@@ -141,28 +143,28 @@ export async function DELETE(
       where: {
         email: session.user.email!
       }
-    })
+    });
 
     if (!user) {
-      return new NextResponse("Usuário não encontrado", { status: 404 })
+      return new NextResponse("Usuário não encontrado", { status: 404 });
     }
 
     // Verificar se o restaurante existe e pertence ao usuário
     const existingRestaurant = await prisma.restaurant.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: user.id,
       },
-    })
+    });
 
     if (!existingRestaurant) {
-      return new NextResponse("Restaurante não encontrado", { status: 404 })
+      return new NextResponse("Restaurante não encontrado", { status: 404 });
     }
 
     // Buscar o arquivo mais recente do restaurante
     const mostRecentFile = await prisma.restaurantFile.findFirst({
       where: {
-        restaurantId: params.id,
+        restaurantId: id,
       },
       orderBy: {
         createdAt: 'desc',
@@ -178,20 +180,21 @@ export async function DELETE(
       
       // Se passaram menos de 90 minutos desde o upload mais recente, não permitir a exclusão
       if (timeDifferenceMinutes < 90) {
-        console.error("Não é possível excluir o arquivo antes de 90 minutos após o upload")
+        console.error("Não é possível excluir o restaurante antes de 90 minutos após o último upload de arquivo");
         return new NextResponse("Não é possível excluir o restaurante antes de 90 minutos após o último upload de arquivo", { status: 403 });
       }
     }
 
     await prisma.restaurant.delete({
       where: {
-        id: params.id,
+        id,
       },
+    });
     });
 
     await prisma.restaurantFile.deleteMany({
       where: {
-        restaurantId: params.id,
+        restaurantId: id,
       },
     });
 
@@ -210,7 +213,7 @@ export async function DELETE(
 
     return successResponse;
   } catch (error) {
-    console.error("Erro ao excluir restaurante:", error)
-    return new NextResponse("Erro interno", { status: 500 })
+    console.error("Erro ao excluir restaurante:", error);
+    return new NextResponse("Erro interno", { status: 500 });
   }
-} 
+}

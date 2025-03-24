@@ -7,34 +7,37 @@ import {deleteFileEmbeddings } from "@/lib/services/big-query-operations"
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string; fileId: string } }
+  { params }: { params: Promise<{ id: string; fileId: string }> }
 ) {
+  const { id, fileId } = await params;
+  
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return new NextResponse("Não autorizado", { status: 401 })
+      return new NextResponse("Não autorizado", { status: 401 });
     }
 
     // Buscar o arquivo e verificar permissões
     const file = await prisma.restaurantFile.findFirst({
       where: {
-        id: params.fileId,
-        restaurantId: params.id,
+        id: fileId,
+        restaurantId: id,
         restaurant: {
           userId: session.user.id,
         },
       },
-    })
+    });
 
     if (!file) {
-      return new NextResponse("Arquivo não encontrado", { status: 404 })
+      return new NextResponse("Arquivo não encontrado", { status: 404 });
     }
 
     // Extrair o nome do arquivo da URL
-    const filePathMatch = file.url.match(/restaurants\/.*$/)
+    const filePathMatch = file.url.match(/restaurants\/.*$/);
     if (!filePathMatch) {
-      throw new Error("URL do arquivo inválida")
+      throw new Error("URL do arquivo inválida");
     }
+
     // Verificar quanto tempo passou desde o upload do arquivo
     const fileCreatedAt = new Date(file.createdAt);
     const currentTime = new Date();
@@ -43,14 +46,15 @@ export async function DELETE(
     
     // Se passaram menos de 90 minutos, não permitir a exclusão
     if (timeDifferenceMinutes < 90) {
-      console.error("Não é possível excluir o arquivo antes de 90 minutos após o upload")
-      return new NextResponse( "Não é possível excluir o arquivo antes de 90 minutos após o upload", { status: 403 });
+      console.error("Não é possível excluir o arquivo antes de 90 minutos após o upload");
+      return new NextResponse("Não é possível excluir o arquivo antes de 90 minutos após o upload", { status: 403 });
     }
     // Deletar do banco de dados
     await prisma.restaurantFile.delete({
       where: {
         id: file.id,
       },
+    });
     });
 
     // Retornar resposta de sucesso
@@ -68,7 +72,7 @@ export async function DELETE(
 
     return response;
   } catch (error) {
-    console.error("Erro ao deletar arquivo:", error)
-    return new NextResponse("Erro interno do servidor", { status: 500 })
+    console.error("Erro ao deletar arquivo:", error);
+    return new NextResponse("Erro interno do servidor", { status: 500 });
   }
-} 
+}

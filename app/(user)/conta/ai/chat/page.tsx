@@ -310,9 +310,8 @@ export default function AIChatPage() {
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 mb-16">
       <div className="lg:grid lg:grid-cols-[300px_1fr] gap-6 relative">
-        {/* Sidebar */}
         <div className="hidden lg:block">
           <div className="sticky top-4 space-y-4">
             <Card className="p-4 border-primary/20">
@@ -331,11 +330,11 @@ export default function AIChatPage() {
 
             <Card className="p-4 border-primary/20">
               <div className="space-y-4">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ">
                   <Bot className="w-4 h-4 text-primary" />
                   <p className="text-sm font-medium text-muted-foreground">Sugestões de Perguntas</p>
                 </div>
-                <ScrollArea className="h-[calc(100vh-16rem)]">
+                <ScrollArea className="h-[calc(89vh-16rem)]">
                   <div className="space-y-4 pr-4">
                     {suggestions.map((category, idx) => (
                       <div key={idx} className="space-y-2">
@@ -365,22 +364,22 @@ export default function AIChatPage() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex flex-col h-[calc(100vh-2rem)]">
-          <Card className="p-4 mb-4 border-primary/20">
+        <div className="flex flex-col h-[calc(85vh-2rem)] lg:h-[calc(85vh-2rem)]">
+         
+          <Card className="p-3 lg:p-4 mb-3 lg:mb-4 border-primary/20">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Bot className="w-8 h-8 text-primary" />
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                <Bot className="w-6 h-6 lg:w-8 lg:h-8 text-primary" />
+                <div className="absolute -bottom-1 -right-1 w-2 h-2 lg:w-3 lg:h-3 bg-green-500 rounded-full border-2 border-background" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-primary">Assistente IA</h1>
-                <p className="text-sm text-muted-foreground">Análise inteligente de dados</p>
+                <h1 className="text-lg lg:text-xl font-bold text-primary">Assistente IA</h1>
+                <p className="text-xs lg:text-sm text-muted-foreground">Análise inteligente de dados</p>
               </div>
             </div>
-          </Card>
-
-          {/* Sugestões móveis */}
-          <div className="lg:hidden space-y-4 mb-4">
+          </Card> 
+          
+          <div className="lg:hidden space-y-3 lg:space-y-4 mb-3 lg:mb-4">
             <Card className="p-4 border-primary/20">
               <RestaurantSelector
                 value={selectedRestaurant}
@@ -388,7 +387,7 @@ export default function AIChatPage() {
                 restaurants={restaurants}
               />
             </Card>
-
+            {/*
             <Card className="p-4 border-primary/20">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {suggestions.flatMap(cat => cat.questions).slice(0, 4).map((suggestion, index) => (
@@ -403,11 +402,12 @@ export default function AIChatPage() {
                 ))}
               </div>
             </Card>
+              */}
           </div>
 
-          <Card className="flex-1 mb-4 border-primary/20 relative overflow-hidden">
+          <Card className="flex-1 mb-3 lg:mb-4 border-primary/20 relative overflow-hidden">
             <ScrollArea className="h-full">
-              <div ref={scrollRef} className="flex flex-col gap-4 p-4">
+              <div ref={scrollRef} className="flex flex-col gap-3 lg:gap-4 p-3 lg:p-4">
                 {messages.map((msg) => {
                   const isAssistant = msg.role === "assistant";
                   return (

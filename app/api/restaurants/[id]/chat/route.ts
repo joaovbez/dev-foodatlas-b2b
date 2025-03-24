@@ -4,7 +4,12 @@ import { generateEmbedding, generateResponseFinal } from "@/lib/services/openAI"
 import { IntentionClassifier } from "@/lib/services/agents";
 import { FlowMisto, FlowNumérico, FlowTexto } from "@/lib/services/Workflows";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
   try {
     const { question } = await req.json();
     if (!question) {
@@ -46,6 +51,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const streamResponse = await generateResponseFinal(finalPrompt);
         
     const encoder = new TextEncoder();
+    
     const stream = new ReadableStream({
       async start(controller) {
         // If we have chart data, send it as a special message first
@@ -64,7 +70,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         controller.close();
       },
     });
-
+    
     return new NextResponse(stream, {
       headers: { "Content-Type": "text/event-stream" },
     });

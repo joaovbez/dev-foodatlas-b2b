@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Loader2, ArrowLeft } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -27,15 +27,15 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-export default function EditRestaurantPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default function EditRestaurantPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  
+  // Use o hook para acessar os parâmetros da rota
+  const params = useParams() as { id: string }
+  const restaurantId = params.id
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -50,7 +50,7 @@ export default function EditRestaurantPage({
   useEffect(() => {
     async function loadRestaurant() {
       try {
-        const response = await fetch(`/api/restaurants/${params.id}`)
+        const response = await fetch(`/api/restaurants/${restaurantId}`)
         if (!response.ok) throw new Error("Falha ao carregar dados do restaurante")
         const data = await response.json()
         
@@ -73,12 +73,12 @@ export default function EditRestaurantPage({
     }
 
     loadRestaurant()
-  }, [params.id, form, router, toast])
+  }, [restaurantId, form, router, toast])
 
   async function onSubmit(data: FormValues) {
     setSaving(true)
     try {
-      const response = await fetch(`/api/restaurants/${params.id}`, {
+      const response = await fetch(`/api/restaurants/${restaurantId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +96,7 @@ export default function EditRestaurantPage({
         description: "Restaurante atualizado com sucesso",
       })
 
-      router.push(`/conta/restaurants/${params.id}`)
+      router.push(`/conta/restaurants/${restaurantId}`)
     } catch (error) {
       toast({
         variant: "destructive",
@@ -114,7 +114,7 @@ export default function EditRestaurantPage({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.push(`/conta/restaurants/${params.id}`)}
+          onClick={() => router.push(`/conta/restaurants/${restaurantId}`)}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -221,7 +221,7 @@ export default function EditRestaurantPage({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => router.push(`/conta/restaurants/${params.id}`)}
+                    onClick={() => router.push(`/conta/restaurants/${restaurantId}`)}
                   >
                     Cancelar
                   </Button>
