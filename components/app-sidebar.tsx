@@ -8,6 +8,7 @@ import {
   Store,
   Loader2,
   Home,
+  ChartNoAxesCombined
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
@@ -78,7 +79,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: "/conta/services",
         },
       ],
-    },
+    },    
     {
       title: "Inteligência Artificial",
       url: "/conta/ai",
@@ -89,6 +90,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           url: "/conta/ai/chat",
         },
       ],
+    },
+    {
+      title: "Dashboards",
+      url: "/conta/dashboards",
+      icon: ChartNoAxesCombined,
+      items: [
+        {
+          title: "Visão Geral",
+          url: "/conta/dashboards/overview",          
+        },
+        {
+          title: "Consumo por Cliente",
+          url: "/conta/dashboards/client-consumption",
+        },
+        {
+          title: "Controle de Custos",
+          url: "/conta/dashboards/cost-control",
+        },
+        {
+          title: "Gestão de Equipe",
+          url: "/conta/dashboards/team-management",
+        },
+      ]
     },
     {
       title: "Restaurantes", 

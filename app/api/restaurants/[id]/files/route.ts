@@ -104,7 +104,6 @@ export async function GET(
   }
 }
 
-// --- Ajuste do POST ---
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
-import { DynamicBarChart } from "@/components/barchartmock"
+import { DynamicBarChart } from "@/components/barchart"
 import ReactMarkdown from 'react-markdown'
 
 interface Restaurant {
@@ -43,12 +43,12 @@ interface Message {
   content: string;
   role: 'assistant' | 'user';
   timestamp: Date;
-  chartData?: ChartData[]; // Replace boolean with actual chart data
+  chartData?: ChartData[]; 
 }
 
 export default function AIChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const bottomRef = useRef<HTMLDivElement>(null)  // ref para o elemento dummy no final do chat
+  const bottomRef = useRef<HTMLDivElement>(null)  
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
@@ -89,7 +89,6 @@ export default function AIChatPage() {
     }
   ]
 
-  // Auto-scroll: sempre que messages mudar, o elemento dummy (bottomRef) é rolado para a vista
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -139,7 +138,6 @@ export default function AIChatPage() {
       setMessages(prev => [...prev, userMessage]);
       setMessage('');
   
-      // Chama o endpoint de chat (que retorna stream)
       const response = await fetch(`/api/restaurants/${selectedRestaurant}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -182,12 +180,10 @@ export default function AIChatPage() {
         if (value) {
           const chunkValue = decoder.decode(value);
           
-          // Check if the chunk contains chart data
           const chartDataMatch = chunkValue.match(/\[CHART_DATA_JSON\]([\s\S]*?)\[\/CHART_DATA_JSON\]/);
           if (chartDataMatch && chartDataMatch[1]) {
             try {
               chartData = JSON.parse(chartDataMatch[1]);
-              // Remove the chart data marker from the content
               const cleanedChunk = chunkValue.replace(/\[CHART_DATA_JSON\]([\s\S]*?)\[\/CHART_DATA_JSON\]/, '');
               finalText += cleanedChunk;
             } catch (error) {
@@ -198,7 +194,6 @@ export default function AIChatPage() {
             finalText += chunkValue;
           }
           
-          // Update the streaming message with current text content only (no charts)
           setMessages(prev => {
             const updated = [...prev];
             const index = updated.findIndex((m) => m.id === partialAssistantMsgId);
@@ -213,11 +208,9 @@ export default function AIChatPage() {
         }
       }
   
-      // Finalize message - replace streaming message with final version
       setMessages(prev => {
         const updated = prev.filter((m) => m.id !== partialAssistantMsgId);
         
-        // Add text message
         updated.push({
           id: (Date.now()).toString(),
           content: finalText,
@@ -225,7 +218,6 @@ export default function AIChatPage() {
           timestamp: new Date()
         });
         
-        // Add chart message separately if charts exist
         if (chartData.length > 0) {
           updated.push({
             id: (Date.now() + 1).toString(),
@@ -363,7 +355,6 @@ export default function AIChatPage() {
           </div>
         </div>
 
-        {/* Chat Area */}
         <div className="flex flex-col h-[calc(85vh-2rem)] lg:h-[calc(85vh-2rem)]">
          
           <Card className="p-3 lg:p-4 mb-3 lg:mb-4 border-primary/20">
@@ -386,23 +377,7 @@ export default function AIChatPage() {
                 onValueChange={setSelectedRestaurant}
                 restaurants={restaurants}
               />
-            </Card>
-            {/*
-            <Card className="p-4 border-primary/20">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {suggestions.flatMap(cat => cat.questions).slice(0, 4).map((suggestion, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="justify-start h-auto py-2 px-3 text-sm hover:bg-primary/10 hover:text-primary"
-                    onClick={() => setMessage(suggestion)}
-                  >
-                    <span className="line-clamp-2 text-left">{suggestion}</span>
-                  </Button>
-                ))}
-              </div>
-            </Card>
-              */}
+            </Card>          
           </div>
 
           <Card className="flex-1 mb-3 lg:mb-4 border-primary/20 relative overflow-hidden">
@@ -427,7 +402,6 @@ export default function AIChatPage() {
                             : "bg-primary text-primary-foreground"
                         }`}
                       >
-                        {/* If it's a chart-only message */}
                         {msg.chartData && msg.chartData.length > 0 && !msg.content && (
                           <div className="text-sm space-y-4">
                             {msg.chartData.map((chartItem, index) => (
@@ -447,7 +421,6 @@ export default function AIChatPage() {
                           </div>
                         )}
                         
-                        {/* For text messages (with or without charts) */}
                         {msg.content && (
                           <ReactMarkdown
                             components={{
@@ -488,7 +461,6 @@ export default function AIChatPage() {
                     </div>
                   </div>
                 )}
-                {/* Elemento dummy para auto-scroll */}
                 <div ref={bottomRef} />
               </div>
             </ScrollArea>

@@ -1,7 +1,6 @@
 import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
 import { generateCSVFileDescription } from "./openAI";
 
-// Função para carregar o arquivo CSV
 const loadCSVFile = async (filePath: string) => {
   try {
     const loader = new CSVLoader(filePath);

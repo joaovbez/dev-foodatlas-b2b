@@ -22,7 +22,7 @@ export async function POST(
 
     let finalPrompt;
     const intention = await IntentionClassifier(question);
-    console.log(intention);
+
     if(intention === 'texto'){
       finalPrompt = await FlowTexto(question, embedding_input, 5, restaurantId);
     } else if(intention === 'numérico'){
@@ -31,30 +31,27 @@ export async function POST(
       finalPrompt = await FlowMisto(question, embedding_input, 5, restaurantId);
     }
 
-    // Extract chart data if present in the prompt
+    // Extrair os dados que geram o gráfico do finalPrompt
     let chartData = [];
     const chartDataMatch = finalPrompt.match(/\[CHART_DATA_START\]([\s\S]*?)\[CHART_DATA_END\]/);
     
     if (chartDataMatch && chartDataMatch[1]) {
       try {
         chartData = JSON.parse(chartDataMatch[1]);
-        // Remove chart data from the prompt to avoid showing it in the response
         finalPrompt = finalPrompt.replace(/\[CHART_DATA_START\][\s\S]*?\[CHART_DATA_END\]/, '');
       } catch (error) {
         console.error("Error parsing chart data:", error);
       }
     }
     
-    // Add chart data as a special message at the beginning of the stream
     const hasChartData = chartData.length > 0;
         
     const streamResponse = await generateResponseFinal(finalPrompt);
         
     const encoder = new TextEncoder();
     
-    const stream = new ReadableStream({
+    const stream = new ReadableStream({    
       async start(controller) {
-        // If we have chart data, send it as a special message first
         if (hasChartData) {
           const chartDataMessage = `[CHART_DATA_JSON]${JSON.stringify(chartData)}[/CHART_DATA_JSON]`;
           controller.enqueue(encoder.encode(chartDataMessage));

@@ -169,7 +169,6 @@ const calculateCosineDistancesAndSignificantShifts = (
   };
 };
 
-// Baseado no array com as quebras semânticas, essa função juntas o chunks com significados próximos
 const groupSentencesIntoChunks = (
   sentenceObjectArray: SentenceObject[],
   shiftIndices: number[]

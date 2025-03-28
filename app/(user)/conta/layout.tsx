@@ -20,6 +20,7 @@ import {
 import { useTheme } from "next-themes"
 import Image from 'next/image'
 import { WhatsAppButton } from "@/components/support-button"
+import { DynamicBreadcrumb } from "@/components/dynamicBreadCrumb"
 
 export default function UserLayout({
   children,
@@ -36,19 +37,7 @@ export default function UserLayout({
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Restaurantes
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Listagem</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>            
+            <DynamicBreadcrumb />
           </div>
           <div className="flex flex-1 items-center justify-end gap-4 p-4">
             <ThemeToggle />

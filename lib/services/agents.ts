@@ -1,5 +1,5 @@
 const { BigQuery } = require('@google-cloud/bigquery');
-import { generateEmbedding, generateIntention, generateResponseCSV, generateResponseFinal } from "./openAI";
+import { generateIntention, generateResponseCSV, generateResponseFinal } from "./openAI";
 
 const bigquery = new BigQuery({
     projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,

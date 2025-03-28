@@ -18,7 +18,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-// Define the props interface for the chart component
 export interface BarChartProps {
   title: string;
   subtitle: string;
@@ -31,7 +30,6 @@ export interface BarChartProps {
   footer?: string;
 }
 
-// Renamed to DynamicBarChart to reflect its dynamic nature
 export function DynamicBarChart({
   title,
   subtitle,
@@ -44,7 +42,6 @@ export function DynamicBarChart({
   footer = ""
 }: BarChartProps) {
 
-  // Generate chart config dynamically based on dataKey
   const chartConfig = {
     [dataKey]: {
       label: dataKey.charAt(0).toUpperCase() + dataKey.slice(1),
@@ -52,7 +49,6 @@ export function DynamicBarChart({
     },
   } as ChartConfig;
 
-  // Display trend icon based on direction
   const TrendIcon = trendDirection === "up" 
     ? TrendingUp 
     : trendDirection === "down" 
