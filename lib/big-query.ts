@@ -69,7 +69,6 @@ export async function saveCSVtoSQL(pathGCS: string, fileId: string) {
   
   const file = bucket.file(pathGCS);
 
-  console.log(gcsUri);
   const metadata = {
     sourceFormat: 'CSV',
     skipLeadingRows: 1, 
@@ -82,13 +81,11 @@ export async function saveCSVtoSQL(pathGCS: string, fileId: string) {
       .table(tableId)
       .load([file], metadata);
       
-    console.log(`Job ${job.id} concluído com sucesso.`);
 
     if (job.status.errors && job.status.errors.length > 0) {
       console.error('Erros no job:', job.status.errors);
       return;
     }
-    console.log(`Tabela ${tableId} criada e carregada a partir de ${gcsUri}`);    
   } catch (error) {
     console.error('Erro ao criar a tabela:', error);
   }
