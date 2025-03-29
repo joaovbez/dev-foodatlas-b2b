@@ -1,5 +1,5 @@
 import { AGENT_Insights, AGENT_SQL_Validator, AGENT_Text_to_SQL, AGENT_Text_to_SQL_Charts } from "./agents";
-import { vector_search_tabular, vector_search_text } from "./big-query-operations";
+import { vector_search_tabular, vector_search_text } from "../big-query";
 
 export async function FlowTexto(question: string, embedding_input: number[], topK: number, restaurantId: string){
     const best_chunks = await vector_search_text(embedding_input, 5, restaurantId);

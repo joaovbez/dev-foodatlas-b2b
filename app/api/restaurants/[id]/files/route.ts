@@ -7,11 +7,11 @@ import { v4 as uuidv4 } from 'uuid';
 import path from "path";
 import os from "os";
 import fs from "fs";
-import { generateEmbedding } from "@/lib/services/openAI";
-import { saveCSVtoSQL, saveEmbedding, saveEmbedding_tabular } from "@/lib/services/big-query-operations";
-import { processTXTFile } from "@/lib/services/chunkerTXT";
-import { processPDFFile } from "@/lib/services/chunkerPDF";
-import { processCSVFile } from "@/lib/services/chunkerCSV";
+import { generateEmbedding } from "@/lib/chat_data/openAI";
+import { saveCSVtoSQL, saveEmbedding, saveEmbedding_tabular } from "@/lib/big-query";
+import { processTXTFile } from "@/lib/chat_data/chunkerTXT";
+import { processPDFFile } from "@/lib/chat_data/chunkerPDF";
+import { processCSVFile } from "@/lib/chat_data/chunkerCSV";
 
 const STORAGE_LIMIT_MB = 100;
 
