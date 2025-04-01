@@ -47,6 +47,7 @@
     "csv-parse": "^5.6.0",
     "d3-dsv": "^2.0.0",
     "date-fns": "^3.6.0",
+    "json2csv": "^6.0.0-alpha.2",
     "langchain": "^0.3.19",
     "lucide-react": "^0.469.0",
     "mathjs": "^14.3.1",
@@ -56,6 +57,7 @@
     "next-auth": "^4.24.11",
     "next-themes": "^0.4.4",
     "openai": "^4.85.1",
+    "pandas": "^0.0.3",
     "papaparse": "^5.5.2",
     "patch-package": "^8.0.0",
     "pdf-parse": "^1.1.1",
@@ -79,6 +81,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/json2csv": "^5.0.7",
     "@types/node": "20.17.14",
     "@types/papaparse": "^5.3.15",
     "@types/pdf-parse": "^1.1.4",
