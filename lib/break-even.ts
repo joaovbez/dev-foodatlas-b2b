@@ -1,5 +1,15 @@
-import { Cost, Revenue } from "@prisma/client"
 import { subMonths, startOfMonth, endOfMonth } from "date-fns"
+
+interface Transaction {
+  restaurant_id: string
+  transaction_type: 'RECEITA' | 'CUSTO'
+  cost_type: 'FIXO' | 'VARIAVEL' | null
+  amount: number
+  description: string
+  date: string
+  created_at: string
+  updated_at: string
+}
 
 interface BreakEvenData {
   currentMonth: {
@@ -25,34 +35,29 @@ interface BreakEvenData {
   }
 }
 
-export function calculateBreakEven(costs: Cost[], revenues: Revenue[]): BreakEvenData {
+export function calculateBreakEven(transactions: Transaction[]): BreakEvenData {
   const now = new Date()
   const currentMonthStart = startOfMonth(now)
   const currentMonthEnd = endOfMonth(now)
   const lastMonthStart = startOfMonth(subMonths(now, 1))
   const lastMonthEnd = endOfMonth(subMonths(now, 1))
 
-  // Filtra custos e receitas por período
-  const currentMonthCosts = costs.filter(
-    (cost) => cost.createdAt >= currentMonthStart && cost.createdAt <= currentMonthEnd
+  // Filtra transações por período
+  const currentMonthTransactions = transactions.filter(
+    (t) => new Date(t.date) >= currentMonthStart && new Date(t.date) <= currentMonthEnd
   )
-  const lastMonthCosts = costs.filter(
-    (cost) => cost.createdAt >= lastMonthStart && cost.createdAt <= lastMonthEnd
-  )
-  const currentMonthRevenues = revenues.filter(
-    (revenue) => revenue.createdAt >= currentMonthStart && revenue.createdAt <= currentMonthEnd
-  )
-  const lastMonthRevenues = revenues.filter(
-    (revenue) => revenue.createdAt >= lastMonthStart && revenue.createdAt <= lastMonthEnd
+  const lastMonthTransactions = transactions.filter(
+    (t) => new Date(t.date) >= lastMonthStart && new Date(t.date) <= lastMonthEnd
   )
 
   // Calcula custos fixos e variáveis
-  const calculateCosts = (costs: Cost[]) => {
+  const calculateCosts = (transactions: Transaction[]) => {
+    const costs = transactions.filter(t => t.transaction_type === 'CUSTO')
     const fixedCosts = costs
-      .filter((cost) => cost.type === "FIXED")
+      .filter((cost) => cost.cost_type === "FIXO")
       .reduce((sum, cost) => sum + cost.amount, 0)
     const variableCosts = costs
-      .filter((cost) => cost.type === "VARIABLE")
+      .filter((cost) => cost.cost_type === "VARIAVEL")
       .reduce((sum, cost) => sum + cost.amount, 0)
     return {
       fixedCosts,
@@ -62,8 +67,10 @@ export function calculateBreakEven(costs: Cost[], revenues: Revenue[]): BreakEve
   }
 
   // Calcula receitas
-  const calculateRevenue = (revenues: Revenue[]) => {
-    return revenues.reduce((sum, revenue) => sum + revenue.amount, 0)
+  const calculateRevenue = (transactions: Transaction[]) => {
+    return transactions
+      .filter(t => t.transaction_type === 'RECEITA')
+      .reduce((sum, t) => sum + t.amount, 0)
   }
 
   // Calcula ponto de break-even
@@ -74,8 +81,8 @@ export function calculateBreakEven(costs: Cost[], revenues: Revenue[]): BreakEve
   }
 
   // Dados do mês atual
-  const currentMonthCostsData = calculateCosts(currentMonthCosts)
-  const currentMonthRevenue = calculateRevenue(currentMonthRevenues)
+  const currentMonthCostsData = calculateCosts(currentMonthTransactions)
+  const currentMonthRevenue = calculateRevenue(currentMonthTransactions)
   const currentMonthBreakEvenPoint = calculateBreakEvenPoint(
     currentMonthCostsData.fixedCosts,
     currentMonthCostsData.variableCosts,
@@ -83,8 +90,8 @@ export function calculateBreakEven(costs: Cost[], revenues: Revenue[]): BreakEve
   )
 
   // Dados do mês anterior
-  const lastMonthCostsData = calculateCosts(lastMonthCosts)
-  const lastMonthRevenue = calculateRevenue(lastMonthRevenues)
+  const lastMonthCostsData = calculateCosts(lastMonthTransactions)
+  const lastMonthRevenue = calculateRevenue(lastMonthTransactions)
   const lastMonthBreakEvenPoint = calculateBreakEvenPoint(
     lastMonthCostsData.fixedCosts,
     lastMonthCostsData.variableCosts,

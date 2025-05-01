@@ -51,17 +51,20 @@ export function DynamicBreadcrumb() {
   
   const generateBreadcrumbItems = () => {
     let currentPath = ''
-    let currentRoute : any;
+    let currentRoute : any = routeMap;
     const items: JSX.Element[] = []
-    currentRoute = routeMap
     
-    segments.map((segment, index) => {
+    segments.forEach((segment, index) => {
       currentPath += `/${segment}`
       
-      const title = currentRoute[segment as keyof typeof currentRoute]?.title;
-    
-      currentRoute = currentRoute[segment as keyof typeof currentRoute]?.children;
+      const currentSegment = currentRoute[segment as keyof typeof currentRoute];
+      const title = currentSegment?.title || segment;
       
+      if (currentSegment?.children) {
+        currentRoute = currentSegment.children;
+      } else {
+        currentRoute = {};
+      }
 
       if (index > 0) {
         items.push(

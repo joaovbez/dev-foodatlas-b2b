@@ -1,13 +1,9 @@
-const { BigQuery } = require('@google-cloud/bigquery');
+import { BigQuery } from '@google-cloud/bigquery'
 import { generateIntention, generateResponseCSV, generateResponseFinal } from "./openAI";
 
-const bigquery = new BigQuery({
-    projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
-    credentials: {
-      client_email: process.env.GBQ_CLIENT_EMAIL,
-      private_key: process.env.GBQ_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    },
-  });
+const bigquery = new BigQuery()
+
+export const dataset = bigquery.dataset(process.env.BIGQUERY_DATASET!)
 
 export async function IntentionClassifier(user_input: string): Promise<string> {
 
@@ -155,7 +151,10 @@ export async function AGENT_Insights(query: string, tableInfo: string) {
 
 export async function AGENT_Text_to_SQL(query: string, tableInfo: string, tableName: string, insights: string) {
     console.log("Agente de SQL padrão em ação.");
-    const datasetId = process.env.GOOGLE_DATASET_SQL;       
+    const datasetId = process.env.GOOGLE_DATASET_SQL;
+    if (!datasetId) {
+        throw new Error('GOOGLE_DATASET_SQL não está definido nas variáveis de ambiente');
+    }
     const tableId = tableName;
     const [tableMetadata] = await bigquery
       .dataset(datasetId)
@@ -239,7 +238,10 @@ export async function AGENT_Text_to_SQL(query: string, tableInfo: string, tableN
 
 export async function AGENT_Text_to_SQL_Charts(query: string, insights: string, tableInfo: string, tableName: string) {
   console.log("Agente de Gráfico em ação.");
-  const datasetId = process.env.GOOGLE_DATASET_SQL;       
+  const datasetId = process.env.GOOGLE_DATASET_SQL;
+  if (!datasetId) {
+      throw new Error('GOOGLE_DATASET_SQL não está definido nas variáveis de ambiente');
+  }
   const tableId = tableName;
   const [tableMetadata] = await bigquery
     .dataset(datasetId)

@@ -25,11 +25,11 @@ const FILE_TYPES = [
   },
   {
     label: "Controle de Estoque",
-    accept: ".pdf",
+    accept: ".pdf,.csv",
   },
   {
     label: "Escala de Funcionários",
-    accept: ".xlsx,.xls",
+    accept: ".xlsx,.xls,.csv",
   },
   {
     label: "Fluxo de Caixa",

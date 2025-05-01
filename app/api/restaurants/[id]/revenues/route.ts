@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
+import { saveRevenue, getBreakEvenData } from "@/lib/big-query"
 
 export async function POST(
   req: Request,
@@ -11,28 +11,27 @@ export async function POST(
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
-      return new NextResponse("Unauthorized", { status: 401 })
+      return new NextResponse("Não autorizado", { status: 401 })
     }
 
     const body = await req.json()
-    const { amount, description } = body
+    const { amount, description, date } = body
 
-    if (!amount || !description) {
-      return new NextResponse("Missing required fields", { status: 400 })
+    if (!amount || !description || !date) {
+      return new NextResponse("Campos obrigatórios faltando", { status: 400 })
     }
 
-    const revenue = await prisma.revenue.create({
-      data: {
-        amount,
-        description,
-        restaurantId: params.id,
-      },
-    })
+    await saveRevenue(
+      params.id,
+      amount,
+      description,
+      date
+    )
 
-    return NextResponse.json(revenue)
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[REVENUES_POST]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    return new NextResponse("Erro interno", { status: 500 })
   }
 }
 
@@ -44,21 +43,18 @@ export async function GET(
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
-      return new NextResponse("Unauthorized", { status: 401 })
+      return new NextResponse("Não autorizado", { status: 401 })
     }
 
-    const revenues = await prisma.revenue.findMany({
-      where: {
-        restaurantId: params.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
+    const searchParams = new URL(req.url).searchParams
+    const startDate = searchParams.get("startDate") || new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString()
+    const endDate = searchParams.get("endDate") || new Date().toISOString()
+
+    const revenues = await getBreakEvenData(params.id, startDate, endDate)
 
     return NextResponse.json(revenues)
   } catch (error) {
     console.error("[REVENUES_GET]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    return new NextResponse("Erro interno", { status: 500 })
   }
 } 

@@ -7,21 +7,30 @@ import { bucket } from "@/lib/google-cloud-storage"
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
   try {
+    console.log("[RESTAURANT_GET] Iniciando busca do restaurante:", params.id);
+
+    // Validar se o ID foi fornecido
+    if (!params.id) {
+      return new NextResponse("ID do restaurante não fornecido", { status: 400 });
+    }
+
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    console.log("[RESTAURANT_GET] Sessão encontrada:", !!session);
+
+    if (!session?.user?.email) {
       return new NextResponse("Não autorizado", { status: 401 });
     }
 
     // Buscar o usuário completo
     const user = await prisma.user.findUnique({
       where: {
-        email: session.user.email!
+        email: session.user.email
       }
     });
+    console.log("[RESTAURANT_GET] Usuário encontrado:", !!user);
 
     if (!user) {
       return new NextResponse("Usuário não encontrado", { status: 404 });
@@ -30,10 +39,19 @@ export async function GET(
     // Buscar o restaurante garantindo que pertence ao usuário
     const restaurant = await prisma.restaurant.findFirst({
       where: {
-        id,
+        id: params.id,
         userId: user.id,
       },
+      include: {
+        files: {
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1
+        }
+      }
     });
+    console.log("[RESTAURANT_GET] Restaurante encontrado:", !!restaurant);
 
     if (!restaurant) {
       return new NextResponse("Restaurante não encontrado", { status: 404 });
@@ -41,8 +59,8 @@ export async function GET(
 
     return NextResponse.json(restaurant);
   } catch (error) {
-    console.error("Erro ao buscar restaurante:", error);
-    return new NextResponse("Erro interno", { status: 500 });
+    console.error("[RESTAURANT_GET] Erro detalhado:", error);
+    return new NextResponse("Erro interno do servidor", { status: 500 });
   }
 }
 
@@ -201,12 +219,6 @@ export async function DELETE(
     const successResponse = new NextResponse(null, { status: 204 });
 
     
-    // Excluir arquivos do restaurante no Cloud Storage em background
-    const prefixFolder = `restaurants/${id}`;    
-    bucket.deleteFiles({
-      prefix: prefixFolder,
-    });
-
     // Excluir embeddings dos arquivos relacionados ao restaurante em background
     deleteRestaurantEmbeddings(existingRestaurant.id);
 
