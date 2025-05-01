@@ -177,27 +177,29 @@ export default function RestaurantsPage() {
                       <AlertDialogTitle className="text-destructive">
                         Excluir Restaurante
                       </AlertDialogTitle>
-                      <AlertDialogDescription className="space-y-4">
-                        <p>
-                          Esta ação não pode ser desfeita. Isso excluirá permanentemente o restaurante{" "}
-                          <span className="font-semibold text-destructive">
-                            {selectedRestaurant?.name}
-                          </span>{" "}
-                          e todos os dados associados.
-                        </p>
-                        <div className="space-y-2">
-                          <p className="font-medium text-destructive">
-                            Digite o nome do restaurante para confirmar:
+                      <AlertDialogDescription>
+                        <div className="space-y-4">
+                          <p>
+                            Esta ação não pode ser desfeita. Isso excluirá permanentemente o restaurante{" "}
+                            <span className="font-semibold text-destructive">
+                              {selectedRestaurant?.name}
+                            </span>{" "}
+                            e todos os dados associados.
                           </p>
-                          <Input
-                            value={confirmDelete}
-                            onChange={(e) => setConfirmDelete(e.target.value)}
-                            placeholder={selectedRestaurant?.name}
-                            className={cn(
-                              "border-destructive/50 focus-visible:ring-destructive",
-                              confirmDelete && confirmDelete !== selectedRestaurant?.name && "border-destructive"
-                            )}
-                          />
+                          <div className="space-y-2">
+                            <p className="font-medium text-destructive">
+                              Digite o nome do restaurante para confirmar:
+                            </p>
+                            <Input
+                              value={confirmDelete}
+                              onChange={(e) => setConfirmDelete(e.target.value)}
+                              placeholder={selectedRestaurant?.name}
+                              className={cn(
+                                "border-destructive/50 focus-visible:ring-destructive",
+                                confirmDelete && confirmDelete !== selectedRestaurant?.name && "border-destructive"
+                              )}
+                            />
+                          </div>
                         </div>
                       </AlertDialogDescription>
                     </AlertDialogHeader>

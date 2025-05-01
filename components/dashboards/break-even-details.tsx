@@ -8,13 +8,15 @@ import { ArrowDown, ArrowUp, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useQuery } from "@tanstack/react-query"
-function formatCurrency(value: number) {
+
+function formatCurrency(value: number | null | undefined) {
+  if (typeof value !== "number" || isNaN(value)) return "—";
   return value.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  })
+  });
 }
 
 function VariationIndicator({ value, type = "cost" }: { value: number; type?: "cost" | "revenue" }) {

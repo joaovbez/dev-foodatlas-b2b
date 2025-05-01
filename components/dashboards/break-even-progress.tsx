@@ -47,8 +47,35 @@ export function BreakEvenProgress() {
     )
   }
 
-  const progressPercentage = (breakEvenData.currentMonth.revenue / breakEvenData.currentMonth.breakEvenPoint) * 100
-  const daysToBreakEven = Math.ceil((breakEvenData.currentMonth.breakEvenPoint - breakEvenData.currentMonth.revenue) / (breakEvenData.currentMonth.revenue / new Date().getDate()))
+  const receita = breakEvenData.currentMonth.revenue;
+  const meta = breakEvenData.currentMonth.breakEvenPoint;
+  const diaAtual = new Date().getDate();
+
+  let daysToBreakEven: number | null = null;
+  if (
+    typeof receita === 'number' &&
+    typeof meta === 'number' &&
+    receita > 0 &&
+    meta > receita &&
+    diaAtual > 0
+  ) {
+    const dailyAvg = receita / diaAtual;
+    if (dailyAvg > 0) {
+      daysToBreakEven = Math.ceil((meta - receita) / dailyAvg);
+    }
+  }
+
+  let breakEvenDate: Date | null = null;
+  if (
+    daysToBreakEven !== null &&
+    daysToBreakEven > 0 &&
+    Number.isFinite(daysToBreakEven)
+  ) {
+    breakEvenDate = new Date();
+    breakEvenDate.setDate(breakEvenDate.getDate() + daysToBreakEven);
+  }
+
+  const progressPercentage = meta > 0 ? (receita / meta) * 100 : 0;
 
   return (
     <Card className="col-span-1">
@@ -68,13 +95,13 @@ export function BreakEvenProgress() {
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Meta Mensal</p>
             <p className="text-2xl font-bold">
-              R$ {breakEvenData.currentMonth.breakEvenPoint.toLocaleString("pt-BR")}
+              R$ {meta.toLocaleString("pt-BR")}
             </p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Receita Atual</p>
             <p className="text-2xl font-bold">
-              R$ {breakEvenData.currentMonth.revenue.toLocaleString("pt-BR")}
+              R$ {receita.toLocaleString("pt-BR")}
             </p>
           </div>
         </div>
@@ -83,12 +110,14 @@ export function BreakEvenProgress() {
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Data prevista do Break-Even</p>
             <p className="text-lg font-semibold">
-              {format(new Date(new Date().setDate(new Date().getDate() + daysToBreakEven)), "dd 'de' MMMM", { locale: ptBR })}
+              {breakEvenDate && !isNaN(breakEvenDate.getTime())
+                ? format(breakEvenDate, "dd 'de' MMMM", { locale: ptBR })
+                : "—"}
             </p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Dias Restantes</p>
-            <p className="text-lg font-semibold">{daysToBreakEven} dias</p>
+            <p className="text-lg font-semibold">{daysToBreakEven && daysToBreakEven > 0 ? daysToBreakEven + ' dias' : '—'}</p>
           </div>
         </div>
       </CardContent>
