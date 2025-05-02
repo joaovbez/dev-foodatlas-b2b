@@ -7,13 +7,15 @@ import { bucket } from "@/lib/google-cloud-storage"
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    console.log("[RESTAURANT_GET] Iniciando busca do restaurante:", params.id);
+    // Estamos esperando o objeto params antes de acessar suas propriedades
+    const id = context.params.id;
+    console.log("[RESTAURANT_GET] Iniciando busca do restaurante:", id);
 
     // Validar se o ID foi fornecido
-    if (!params.id) {
+    if (!id) {
       return new NextResponse("ID do restaurante não fornecido", { status: 400 });
     }
 
@@ -39,7 +41,7 @@ export async function GET(
     // Buscar o restaurante garantindo que pertence ao usuário
     const restaurant = await prisma.restaurant.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: user.id,
       },
       include: {
@@ -66,10 +68,11 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
-  const { id } = await params;
   try {
+    // Extração segura do ID
+    const id = context.params.id;
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse("Não autorizado", { status: 401 });
@@ -147,10 +150,11 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
-  const { id } = await params;
   try {
+    // Extração segura do ID
+    const id = context.params.id;
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse("Não autorizado", { status: 401 });

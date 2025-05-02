@@ -22,7 +22,11 @@ const data = [
   { month: "Dez", revenue: 5000 },
 ]
 
-export function ChartRevenueTotal() {
+interface ChartRevenueTotalProps {
+  restaurantId: string
+}
+
+export function ChartRevenueTotal({ restaurantId }: ChartRevenueTotalProps) {
   const [period, setPeriod] = React.useState("yearly")
 
   return (

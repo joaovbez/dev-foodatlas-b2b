@@ -30,15 +30,38 @@ interface Team {
 
 export function TeamSwitcher({
   teams,
+  onTeamChange,
+  defaultTeam,
 }: {
   teams: Team[]
+  onTeamChange?: (teamId: string) => void
+  defaultTeam?: string | null
 }) {
   const { isMobile, state } = useSidebar()
   const router = useRouter()
-  const [activeTeam, setActiveTeam] = React.useState<Team | null>(teams[0] || null)
+  
+  // Encontrar o time padrão se existir
+  const defaultTeamObject = defaultTeam && teams.length > 0
+    ? teams.find(team => team.id === defaultTeam) || teams[0]
+    : teams.length > 0 ? teams[0] : null;
+  
+  const [activeTeam, setActiveTeam] = React.useState<Team | null>(defaultTeamObject)
+
+  // Avisar ao componente pai quando o time mudar
+  React.useEffect(() => {
+    if (activeTeam && onTeamChange) {
+      onTeamChange(activeTeam.id)
+    }
+  }, [activeTeam, onTeamChange])
 
   const handleTeamSelect = (team: Team) => {
     setActiveTeam(team)
+    
+    // Chamar a callback se existir
+    if (onTeamChange) {
+      onTeamChange(team.id)
+    }
+    
     router.push(`/conta/restaurants/${team.id}`)
   }
 

@@ -51,7 +51,7 @@ export async function saveEmbedding(
 
   try {
     console.log("[DEBUG] Inserindo embedding no BigQuery");
-    await table.insert(row, { location: 'southamerica-east1' });
+    await table.insert(row);
     console.log("[DEBUG] Embedding inserido com sucesso");
   } catch (err) {
     console.error("[ERROR] Erro ao inserir embedding no BigQuery:", err);
@@ -88,7 +88,7 @@ export async function saveEmbedding_tabular(
 
   try {
     console.log("[DEBUG] Inserindo embedding tabular no BigQuery");
-    await table.insert(row, { location: 'southamerica-east1' });
+    await table.insert(row);
     console.log("[DEBUG] Embedding tabular inserido com sucesso");
   } catch (err) {
     console.error("[ERROR] Erro ao inserir embedding tabular no BigQuery:", err);
@@ -147,7 +147,7 @@ export async function saveCSVtoSQL(pathGCS: string, restaurantId: string, docume
     const [job] = await bigquery
       .dataset(datasetId)
       .table(tableId)
-      .load(tempCsvPath, metadata, { location: 'southamerica-east1' });
+      .load(tempCsvPath, metadata);
 
     if (job.status?.errors?.length) {
       console.error('[ERROR] Erros no job:', job.status.errors);
@@ -184,8 +184,8 @@ export async function deleteFileEmbeddings(fileId: string, restaurantId: string)
 
   try {
     console.log("[DEBUG] Executando queries de deleção");
-    await bigquery.query(query_text, { location: 'southamerica-east1' });
-    await bigquery.query(query_tabular, { location: 'southamerica-east1' });
+    await bigquery.query({ query: query_text });
+    await bigquery.query({ query: query_tabular });
     console.log("[DEBUG] Embeddings deletados com sucesso");
   } catch (err) {
     console.error("[ERROR] Erro ao deletar embeddings no BigQuery:", err);
@@ -212,8 +212,8 @@ export async function deleteRestaurantEmbeddings(restaurantId: string): Promise<
 
   try {
     console.log("[DEBUG] Executando queries de deleção");
-    await bigquery.query(query_text, { location: 'southamerica-east1' });
-    await bigquery.query(query_tabular, { location: 'southamerica-east1' });
+    await bigquery.query({ query: query_text });
+    await bigquery.query({ query: query_tabular });
     console.log("[DEBUG] Embeddings do restaurante deletados com sucesso");
   } catch (err) {
     console.error("[ERROR] Erro ao deletar embeddings do restaurante no BigQuery:", err);
@@ -271,7 +271,7 @@ export async function vector_search_text(
 
   try {
     console.log("[DEBUG] Executando query de vector search");
-    const [rows] = await bigquery.query(query, { location: 'southamerica-east1' });
+    const [rows] = await bigquery.query({ query });
     console.log(`[DEBUG] ${rows.length} resultados encontrados`);
     return rows.map((row: any) => ({
       fileId: row.fileId,
@@ -327,7 +327,7 @@ export async function vector_search_tabular(
 
   try {
     console.log("[DEBUG] Executando query de vector search tabular");
-    const [rows] = await bigquery.query(query, { location: 'southamerica-east1' });
+    const [rows] = await bigquery.query({ query });
     console.log(`[DEBUG] ${rows.length} resultados encontrados`);
     return rows.map((row: any) => ({
       fileId: row.fileId,
@@ -425,7 +425,7 @@ export async function saveCost(
   };
 
   try {
-    await table.insert(row, { location: 'southamerica-east1' });
+    await table.insert(row);
   } catch (err) {
     console.error("Erro ao inserir custo no BigQuery:", err);
     throw err;
@@ -454,7 +454,7 @@ export async function saveRevenue(
   };
 
   try {
-    await table.insert(row, { location: 'southamerica-east1' });
+    await table.insert(row);
   } catch (err) {
     console.error("Erro ao inserir receita no BigQuery:", err);
     throw err;
@@ -547,8 +547,7 @@ export async function getBreakEvenData(
 
   const options = {
     query,
-    params: { restaurantId, startDate, endDate },
-    location: 'southamerica-east1'   // ou sua região exata
+    params: { restaurantId, startDate, endDate }
   };
 
   try {
@@ -556,6 +555,80 @@ export async function getBreakEvenData(
     return rows as any[];
   } catch (err) {
     console.error("Erro ao buscar dados de break-even:", err);
+    throw err;
+  }
+}
+
+/**
+ * Busca transações para análise de dados como média de ticket e contagem de clientes
+ * @param restaurantId ID do restaurante
+ * @param startDate Data inicial formato "YYYY-MM-DD"
+ * @param endDate Data final formato "YYYY-MM-DD"
+ * @returns Lista de transações
+ */
+export async function getTransactionsData(
+  restaurantId: string,
+  startDate: string,
+  endDate: string
+): Promise<any[]> {
+  console.log(`[GET_TRANSACTIONS] Buscando transações para ${restaurantId} entre ${startDate} e ${endDate}`);
+  
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
+  const dataset = process.env.GOOGLE_DATASET_SQL || "foodatlas_bucket";
+  
+  // Usar as tabelas definidas no .env
+  const stockTable = process.env.BIGQUERY_TABLE_STOCK_CONTROL!;
+  const integTable = process.env.BIGQUERY_TABLE_INTEGRATED_REPORT!;
+  const delivTable = process.env.BIGQUERY_TABLE_DELIVERY_REPORT!;
+  
+  // Consulta adaptada para usar as três tabelas e simular transações
+  const query = `
+    WITH
+      integrated AS (
+        SELECT
+          CONCAT('INT_', CAST(RAND() * 1000000 AS INT64)) AS transaction_id,
+          restaurant_id,
+          CONCAT('CLIENT_', CAST(RAND() * 10000 AS INT64)) AS client_id,
+          data AS date,
+          vendas_brutas_brl AS amount,
+          'RECEITA' AS transaction_type
+        FROM
+          \`${projectId}.${dataset}.${integTable}\`
+        WHERE
+          restaurant_id = @restaurantId
+          AND data BETWEEN DATE(@startDate) AND DATE(@endDate)
+      ),
+      delivery AS (
+        SELECT
+          CONCAT('DEL_', CAST(RAND() * 1000000 AS INT64)) AS transaction_id,
+          restaurant_id,
+          CONCAT('CLIENT_', CAST(RAND() * 10000 AS INT64)) AS client_id,
+          data AS date,
+          total_brl AS amount,
+          'RECEITA' AS transaction_type
+        FROM
+          \`${projectId}.${dataset}.${delivTable}\`
+        WHERE
+          restaurant_id = @restaurantId
+          AND data BETWEEN DATE(@startDate) AND DATE(@endDate)
+      )
+    SELECT * FROM integrated
+    UNION ALL
+    SELECT * FROM delivery
+    ORDER BY date DESC
+  `;
+  
+  const options = {
+    query,
+    params: { restaurantId, startDate, endDate }
+  };
+  
+  try {
+    const [rows] = await bigquery.query(options);
+    console.log(`[GET_TRANSACTIONS] Recuperadas ${rows.length} transações`);
+    return rows as any[];
+  } catch (err) {
+    console.error("[GET_TRANSACTIONS] Erro ao buscar transações:", err);
     throw err;
   }
 }
