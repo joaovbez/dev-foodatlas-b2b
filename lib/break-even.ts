@@ -1,5 +1,6 @@
-import { subMonths, startOfMonth, endOfMonth } from "date-fns"
+import { subMonths, startOfMonth, endOfMonth, format } from "date-fns"
 
+// Interface para as transações individuais (mantido para compatibilidade com código existente)
 interface Transaction {
   restaurant_id: string
   transaction_type: 'RECEITA' | 'CUSTO'
@@ -9,6 +10,18 @@ interface Transaction {
   date: string
   created_at: string
   updated_at: string
+}
+
+// Interface para os dados agregados retornados do BigQuery
+interface BigQueryBreakEvenRow {
+  month: string; // Formato "YYYY-MM-DD" (primeiro dia do mês)
+  gross_sales: number;
+  delivery_revenue: number;
+  total_revenue: number;
+  variable_costs: number;
+  fixed_costs: number;
+  contribution_margin_ratio: number;
+  break_even_revenue: number;
 }
 
 interface BreakEvenData {
@@ -35,7 +48,79 @@ interface BreakEvenData {
   }
 }
 
-export function calculateBreakEven(transactions: Transaction[]): BreakEvenData {
+export function calculateBreakEven(data: any[]): BreakEvenData {
+  // Verificar se os dados são no formato BigQuery ou no formato de transações
+  const isBigQueryFormat = data.length > 0 && 'month' in data[0] && 'total_revenue' in data[0];
+  
+  if (isBigQueryFormat) {
+    return calculateBreakEvenFromBigQuery(data as BigQueryBreakEvenRow[]);
+  } else {
+    return calculateBreakEvenFromTransactions(data as Transaction[]);
+  }
+}
+
+// Nova função para calcular break-even a partir dos dados agregados do BigQuery
+function calculateBreakEvenFromBigQuery(rows: BigQueryBreakEvenRow[]): BreakEvenData {
+  // Ordenar os dados por mês (mais recente primeiro)
+  const sortedRows = [...rows].sort((a, b) => {
+    return new Date(b.month).getTime() - new Date(a.month).getTime();
+  });
+
+  // Obter dados dos últimos meses
+  const currentMonthData = sortedRows[0] || {
+    fixed_costs: 0,
+    variable_costs: 0,
+    total_revenue: 0,
+    break_even_revenue: 0
+  };
+  
+  const lastMonthData = sortedRows[1] || {
+    fixed_costs: 0,
+    variable_costs: 0,
+    total_revenue: 0,
+    break_even_revenue: 0
+  };
+
+  // Calcular projeção para o próximo mês
+  const revenueRatio = currentMonthData.total_revenue && lastMonthData.total_revenue
+    ? currentMonthData.total_revenue / lastMonthData.total_revenue
+    : 1.1; // Crescimento padrão de 10% se não houver dados
+
+  const projectedRevenue = currentMonthData.total_revenue * revenueRatio;
+  const projectedVariableCosts = currentMonthData.variable_costs * revenueRatio;
+  const projectedFixedCosts = currentMonthData.fixed_costs; // Custos fixos geralmente não mudam
+  const projectedTotalCosts = projectedFixedCosts + projectedVariableCosts;
+  
+  // Calcular break-even point para próximo mês
+  const projectedBreakEvenPoint = projectedFixedCosts / (1 - (projectedVariableCosts / projectedRevenue));
+
+  return {
+    currentMonth: {
+      fixedCosts: currentMonthData.fixed_costs || 0,
+      variableCosts: currentMonthData.variable_costs || 0,
+      totalCosts: (currentMonthData.fixed_costs || 0) + (currentMonthData.variable_costs || 0),
+      revenue: currentMonthData.total_revenue || 0,
+      breakEvenPoint: currentMonthData.break_even_revenue || 0
+    },
+    lastMonth: {
+      fixedCosts: lastMonthData.fixed_costs || 0,
+      variableCosts: lastMonthData.variable_costs || 0,
+      totalCosts: (lastMonthData.fixed_costs || 0) + (lastMonthData.variable_costs || 0),
+      revenue: lastMonthData.total_revenue || 0,
+      breakEvenPoint: lastMonthData.break_even_revenue || 0
+    },
+    nextMonth: {
+      fixedCosts: projectedFixedCosts,
+      variableCosts: projectedVariableCosts,
+      totalCosts: projectedTotalCosts,
+      projectedRevenue: projectedRevenue,
+      breakEvenPoint: projectedBreakEvenPoint
+    }
+  };
+}
+
+// Função original renomeada para manter compatibilidade
+function calculateBreakEvenFromTransactions(transactions: Transaction[]): BreakEvenData {
   const now = new Date()
   const currentMonthStart = startOfMonth(now)
   const currentMonthEnd = endOfMonth(now)
@@ -99,7 +184,7 @@ export function calculateBreakEven(transactions: Transaction[]): BreakEvenData {
   )
 
   // Projeção para o próximo mês (usando média de crescimento dos últimos 2 meses)
-  const revenueGrowth = currentMonthRevenue / lastMonthRevenue
+  const revenueGrowth = lastMonthRevenue > 0 ? currentMonthRevenue / lastMonthRevenue : 1.1
   const projectedRevenue = currentMonthRevenue * revenueGrowth
 
   const projectedFixedCosts = currentMonthCostsData.fixedCosts

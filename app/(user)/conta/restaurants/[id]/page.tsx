@@ -107,6 +107,15 @@ export default function RestaurantDetailsPage() {
             {restaurant?.name}
           </h1>
         </div>
+        <div>
+          <Button 
+            variant="default"
+            onClick={() => router.push(`/conta/restaurants/${id}/dashboards`)}
+          >
+            <ChartLine className="mr-2 h-4 w-4" />
+            Ver Dashboard
+          </Button>
+        </div>
       </header>
 
       <main className="flex-1 p-4 md:p-6 space-y-6">
@@ -204,5 +213,26 @@ export default function RestaurantDetailsPage() {
         </div>
       </main>
     </>
+  )
+}
+
+// Ícone ChartLine
+function ChartLine(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 3v18h18" />
+      <path d="m19 9-5 5-4-4-3 3" />
+    </svg>
   )
 }

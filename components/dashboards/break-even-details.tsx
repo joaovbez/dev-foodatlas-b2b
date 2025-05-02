@@ -20,13 +20,14 @@ function formatCurrency(value: number | null | undefined) {
 }
 
 function VariationIndicator({ value, type = "cost" }: { value: number; type?: "cost" | "revenue" }) {
-  const isPositive = value >= 0
-  const color = type === "revenue" 
-    ? (isPositive ? "text-green-500" : "text-red-500")
-    : "text-red-500" // Sempre vermelho para custos
-  const Icon = type === "revenue"
-    ? (isPositive ? ArrowUp : ArrowDown)
-    : (isPositive ? ArrowUp : ArrowDown) // Sempre seta para cima quando aumenta, para baixo quando diminui
+  if (typeof value !== 'number' || isNaN(value)) {
+    return <span>—</span>;
+  }
+  
+  const isPositive = type === "cost" ? value < 0 : value >= 0;
+  const color = isPositive ? "text-green-500" : "text-red-500";
+  
+  const Icon = value >= 0 ? ArrowUp : ArrowDown;
 
   return (
     <div className={cn("flex items-center gap-1", color)}>
@@ -37,6 +38,7 @@ function VariationIndicator({ value, type = "cost" }: { value: number; type?: "c
 }
 
 function calculateVariation(current: number, previous: number) {
+  if (!current || !previous || previous === 0) return 0;
   return ((current - previous) / previous) * 100
 }
 
@@ -55,13 +57,22 @@ function LoadingSkeleton() {
   )
 }
 
-export function BreakEvenDetails() {
-    const { data: breakEvenData, isLoading } = useQuery({
-    queryKey: ["break-even"],
+interface BreakEvenDetailsProps {
+  restaurantId: string
+}
+
+export function BreakEvenDetails({ restaurantId }: BreakEvenDetailsProps) {
+  const { data: breakEvenData, isLoading, error } = useQuery({
+    queryKey: ["break-even", restaurantId],
     queryFn: async () => {
-      const response = await fetch("/api/restaurants/break-even")
-      if (!response.ok) throw new Error("Failed to fetch break-even data")
-      return response.json()
+      try {
+        const response = await fetch(`/api/restaurants/${restaurantId}/break-even`)
+        if (!response.ok) throw new Error("Failed to fetch break-even data")
+        return response.json()
+      } catch (err) {
+        console.error("Erro ao buscar dados de break-even:", err)
+        return null
+      }
     },
   })
 
@@ -69,7 +80,7 @@ export function BreakEvenDetails() {
   const lastMonth = format(new Date(new Date().setMonth(new Date().getMonth() - 1)), "MMMM", { locale: ptBR })
   const nextMonth = format(new Date(new Date().setMonth(new Date().getMonth() + 1)), "MMMM", { locale: ptBR })
 
-  if (isLoading) {
+  if (isLoading || !breakEvenData) {
     return (
       <Card className="col-span-1 bg-gradient-to-t from-primary/5 to-card">
         <CardHeader>
@@ -81,6 +92,14 @@ export function BreakEvenDetails() {
       </Card>
     )
   }
+
+  const current = breakEvenData.currentMonth || {};
+  const last = breakEvenData.lastMonth || {};
+  const next = breakEvenData.nextMonth || {};
+
+  if (!current.totalCosts) current.totalCosts = (current.fixedCosts || 0) + (current.variableCosts || 0);
+  if (!last.totalCosts) last.totalCosts = (last.fixedCosts || 0) + (last.variableCosts || 0);
+  if (!next.totalCosts) next.totalCosts = (next.fixedCosts || 0) + (next.variableCosts || 0);
 
   return (
     <Card className="col-span-1 bg-gradient-to-t from-primary/5 to-card">
@@ -123,15 +142,15 @@ export function BreakEvenDetails() {
               <TableRow className="hover:bg-muted/50">
                 <TableCell className="font-medium">Custos Fixos</TableCell>
                 <TableCell className="text-right">
-                  {formatCurrency(breakEvenData.lastMonth.fixedCosts)}
+                  {formatCurrency(last.fixedCosts)}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.currentMonth.fixedCosts)}</span>
+                    <span>{formatCurrency(current.fixedCosts)}</span>
                     <VariationIndicator
                       value={calculateVariation(
-                        breakEvenData.currentMonth.fixedCosts,
-                        breakEvenData.lastMonth.fixedCosts
+                        current.fixedCosts || 0,
+                        last.fixedCosts || 0
                       )}
                       type="cost"
                     />
@@ -139,29 +158,22 @@ export function BreakEvenDetails() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.nextMonth.fixedCosts)}</span>
-                    <VariationIndicator
-                      value={calculateVariation(
-                        breakEvenData.nextMonth.fixedCosts,
-                        breakEvenData.currentMonth.fixedCosts
-                      )}
-                      type="cost"
-                    />
+                    <span>—</span>
                   </div>
                 </TableCell>
               </TableRow>
               <TableRow className="hover:bg-muted/50">
                 <TableCell className="font-medium">Custos Variáveis</TableCell>
                 <TableCell className="text-right">
-                  {formatCurrency(breakEvenData.lastMonth.variableCosts)}
+                  {formatCurrency(last.variableCosts)}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.currentMonth.variableCosts)}</span>
+                    <span>{formatCurrency(current.variableCosts)}</span>
                     <VariationIndicator
                       value={calculateVariation(
-                        breakEvenData.currentMonth.variableCosts,
-                        breakEvenData.lastMonth.variableCosts
+                        current.variableCosts || 0,
+                        last.variableCosts || 0
                       )}
                       type="cost"
                     />
@@ -169,29 +181,22 @@ export function BreakEvenDetails() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.nextMonth.variableCosts)}</span>
-                    <VariationIndicator
-                      value={calculateVariation(
-                        breakEvenData.nextMonth.variableCosts,
-                        breakEvenData.currentMonth.variableCosts
-                      )}
-                      type="cost"
-                    />
+                    <span>—</span>
                   </div>
                 </TableCell>
               </TableRow>
               <TableRow className="hover:bg-muted/50">
                 <TableCell className="font-medium">Total de Custos</TableCell>
                 <TableCell className="text-right">
-                  {formatCurrency(breakEvenData.lastMonth.totalCosts)}
+                  {formatCurrency(last.totalCosts)}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.currentMonth.totalCosts)}</span>
+                    <span>{formatCurrency(current.totalCosts)}</span>
                     <VariationIndicator
                       value={calculateVariation(
-                        breakEvenData.currentMonth.totalCosts,
-                        breakEvenData.lastMonth.totalCosts
+                        current.totalCosts || 0,
+                        last.totalCosts || 0
                       )}
                       type="cost"
                     />
@@ -199,29 +204,22 @@ export function BreakEvenDetails() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.nextMonth.totalCosts)}</span>
-                    <VariationIndicator
-                      value={calculateVariation(
-                        breakEvenData.nextMonth.totalCosts,
-                        breakEvenData.currentMonth.totalCosts
-                      )}
-                      type="cost"
-                    />
+                    <span>—</span>
                   </div>
                 </TableCell>
               </TableRow>
               <TableRow className="hover:bg-muted/50">
                 <TableCell className="font-medium">Receita</TableCell>
                 <TableCell className="text-right">
-                  {formatCurrency(breakEvenData.lastMonth.revenue)}
+                  {formatCurrency(last.revenue)}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.currentMonth.revenue)}</span>
+                    <span>{formatCurrency(current.revenue)}</span>
                     <VariationIndicator
                       value={calculateVariation(
-                        breakEvenData.currentMonth.revenue,
-                        breakEvenData.lastMonth.revenue
+                        current.revenue || 0,
+                        last.revenue || 0
                       )}
                       type="revenue"
                     />
@@ -229,29 +227,22 @@ export function BreakEvenDetails() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.nextMonth.projectedRevenue)}</span>
-                    <VariationIndicator
-                      value={calculateVariation(
-                        breakEvenData.nextMonth.projectedRevenue,
-                        breakEvenData.currentMonth.revenue
-                      )}
-                      type="revenue"
-                    />
+                    <span>—</span>
                   </div>
                 </TableCell>
               </TableRow>
               <TableRow className="hover:bg-muted/50 font-bold">
                 <TableCell className="font-medium">Ponto de Break-Even</TableCell>
                 <TableCell className="text-right">
-                  {formatCurrency(breakEvenData.lastMonth.breakEvenPoint)}
+                  {formatCurrency(last.breakEvenPoint)}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.currentMonth.breakEvenPoint)}</span>
+                    <span>{formatCurrency(current.breakEvenPoint)}</span>
                     <VariationIndicator
                       value={calculateVariation(
-                        breakEvenData.currentMonth.breakEvenPoint,
-                        breakEvenData.lastMonth.breakEvenPoint
+                        current.breakEvenPoint || 0,
+                        last.breakEvenPoint || 0
                       )}
                       type="cost"
                     />
@@ -259,14 +250,7 @@ export function BreakEvenDetails() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(breakEvenData.nextMonth.breakEvenPoint)}</span>
-                    <VariationIndicator
-                      value={calculateVariation(
-                        breakEvenData.nextMonth.breakEvenPoint,
-                        breakEvenData.currentMonth.breakEvenPoint
-                      )}
-                      type="cost"
-                    />
+                    <span>—</span>
                   </div>
                 </TableCell>
               </TableRow>

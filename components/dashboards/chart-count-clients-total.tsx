@@ -51,7 +51,11 @@ const mesesCompletos = {
   'December': 'Dezembro'
 }
 
-export function ChartCountClientsTotal() {
+interface ChartCountClientsTotalProps {
+  restaurantId: string
+}
+
+export function ChartCountClientsTotal({ restaurantId }: ChartCountClientsTotalProps) {
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("30d")
 

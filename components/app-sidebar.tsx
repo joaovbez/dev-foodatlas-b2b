@@ -36,6 +36,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session } = useSession()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null)
   
   const user = {
     name: session?.user?.name || "Usuário",
@@ -50,6 +51,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         if (!response.ok) throw new Error("Falha ao carregar restaurantes")
         const data = await response.json()
         setRestaurants(data)
+        if (data.length > 0) {
+          setSelectedRestaurantId(data[0].id)
+        }
       } catch (error) {
         console.error("Erro ao carregar restaurantes:", error)
       } finally {
@@ -67,6 +71,43 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     logo: Store,
     plan: restaurant.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5"),
   }))
+
+  // Handler para quando o usuário trocar de restaurante
+  const handleTeamChange = (teamId: string) => {
+    setSelectedRestaurantId(teamId)
+  }
+
+  const generateDashboardsNavItems = () => {
+    if (!selectedRestaurantId) {
+      return []
+    }
+
+    return [
+      {
+        title: "Dashboards",
+        url: `/conta/restaurants/${selectedRestaurantId}/dashboards`,
+        icon: ChartNoAxesCombined,
+        items: [
+          {
+            title: "Visão Geral",
+            url: `/conta/restaurants/${selectedRestaurantId}/dashboards/overview`,          
+          },
+          {
+            title: "Consumo por Cliente",
+            url: `/conta/restaurants/${selectedRestaurantId}/dashboards/client-consumption`,
+          },
+          {
+            title: "Controle de Custos",
+            url: `/conta/restaurants/${selectedRestaurantId}/dashboards/cost-control`,
+          },
+          {
+            title: "Gestão de Equipe",
+            url: `/conta/restaurants/${selectedRestaurantId}/dashboards/team-management`,
+          },
+        ]
+      }
+    ]
+  }
 
   const navMainData = [
     {
@@ -91,29 +132,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     },
-    {
-      title: "Dashboards",
-      url: "/conta/dashboards",
-      icon: ChartNoAxesCombined,
-      items: [
-        {
-          title: "Visão Geral",
-          url: "/conta/dashboards/overview",          
-        },
-        {
-          title: "Consumo por Cliente",
-          url: "/conta/dashboards/client-consumption",
-        },
-        {
-          title: "Controle de Custos",
-          url: "/conta/dashboards/cost-control",
-        },
-        {
-          title: "Gestão de Equipe",
-          url: "/conta/dashboards/team-management",
-        },
-      ]
-    },
+    ...(selectedRestaurantId ? generateDashboardsNavItems() : []),
     {
       title: "Restaurantes", 
       url: "/conta/restaurants",
@@ -144,7 +163,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={teamsData} />
+        <TeamSwitcher teams={teamsData} onTeamChange={handleTeamChange} defaultTeam={selectedRestaurantId} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMainData} />

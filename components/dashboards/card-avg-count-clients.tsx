@@ -3,7 +3,11 @@ import { TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
-export function AVGCountClient() {
+interface AVGCountClientProps {
+  restaurantId: string
+}
+
+export function AVGCountClient({ restaurantId }: AVGCountClientProps) {
   return (
     <Card className="@container/card">
       <CardHeader className="relative">
