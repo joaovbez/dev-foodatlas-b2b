@@ -8,11 +8,11 @@ import { format, subMonths } from "date-fns";
 
 export async function GET(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { params } = context;
-    const id = params.id;
+    const id = (await params).id
+
     console.log("[BREAK_EVEN_GET] Iniciando busca dos dados de break-even para restaurante:", id);
     
     const session = await getServerSession(authOptions);

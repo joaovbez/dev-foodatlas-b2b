@@ -23,7 +23,7 @@ interface RestaurantFile {
   restaurantId: string;
   createdAt: Date;
   updatedAt: Date;
-  documentType?: string;
+  documentType: string | null;
 }
 
 const STORAGE_LIMIT_MB = 100;
@@ -195,12 +195,15 @@ export async function GET(
     
     console.log(files[0]);
 
+    const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+    const usedStorage = files.reduce((acc, file) => acc + (file.size / 1024 / 1024), 0);
+
     const usage = {
       files,
-      totalSize: files.reduce((acc: number, file: RestaurantFile) => acc + file.size, 0),
-      usedStorage: files.reduce((acc: number, file: RestaurantFile) => acc + (file.size / 1024 / 1024), 0),
+      totalSize,
+      usedStorage,
       availableStorage: STORAGE_LIMIT_MB,
-      percentageUsed: (files.reduce((acc: number, file: RestaurantFile) => acc + (file.size / 1024 / 1024), 0) / STORAGE_LIMIT_MB) * 100
+      percentageUsed: (usedStorage / STORAGE_LIMIT_MB) * 100
     };
 
     return NextResponse.json(usage);

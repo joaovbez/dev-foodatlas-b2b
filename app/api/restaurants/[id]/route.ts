@@ -7,11 +7,11 @@ import { bucket } from "@/lib/google-cloud-storage"
 
 export async function GET(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Estamos esperando o objeto params antes de acessar suas propriedades
-    const id = context.params.id;
+    const id = (await params).id
     console.log("[RESTAURANT_GET] Iniciando busca do restaurante:", id);
 
     // Validar se o ID foi fornecido
@@ -68,11 +68,11 @@ export async function GET(
 
 export async function PATCH(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Extração segura do ID
-    const id = context.params.id;
+    const id = (await params).id
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse("Não autorizado", { status: 401 });
@@ -150,11 +150,11 @@ export async function PATCH(
 
 export async function DELETE(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Extração segura do ID
-    const id = context.params.id;
+    const id = (await params).id
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new NextResponse("Não autorizado", { status: 401 });
