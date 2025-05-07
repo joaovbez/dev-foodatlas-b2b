@@ -5,9 +5,11 @@ import { saveCost, getBreakEvenData } from "@/lib/big-query"
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const id = (await params).id
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -22,7 +24,7 @@ export async function POST(
     }
 
     await saveCost(
-      params.id,
+      id,
       amount,
       type,
       description,
@@ -38,9 +40,11 @@ export async function POST(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const id = (await params).id
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -51,7 +55,7 @@ export async function GET(
     const startDate = searchParams.get("startDate") || new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString()
     const endDate = searchParams.get("endDate") || new Date().toISOString()
 
-    const costs = await getBreakEvenData(params.id, startDate, endDate)
+    const costs = await getBreakEvenData(id, startDate, endDate)
 
     return NextResponse.json(costs)
   } catch (error) {

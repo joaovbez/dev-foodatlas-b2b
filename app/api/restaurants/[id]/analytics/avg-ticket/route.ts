@@ -7,14 +7,11 @@ import { format, subMonths, parseISO } from "date-fns"
 
 export async function GET(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { params } = context;
-    const id = params.id;
-    //console.log("[AVG_TICKET_GET] Iniciando busca do ticket médio para o restaurante:", id);
+    const id = (await params).id
 
-    // Validar se o ID foi fornecido
     if (!id) {
       return new NextResponse("ID do restaurante não fornecido", { status: 400 });
     }
@@ -148,4 +145,4 @@ export async function GET(
     //console.error("[AVG_TICKET_GET] Erro:", error);
     return new NextResponse("Erro interno do servidor", { status: 500 });
   }
-} 
+}

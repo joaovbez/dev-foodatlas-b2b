@@ -7,12 +7,12 @@ import { format, subMonths } from "date-fns"
 
 export async function GET(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Estamos esperando o objeto params antes de acessar suas propriedades
-    const { params } = context;
-    const id = params.id;
+    const id = (await params).id
+
     //console.log("[COUNT_CLIENTS_GET] Iniciando busca de contagem de clientes para o restaurante:", id);
 
     // Validar se o ID foi fornecido
