@@ -94,22 +94,22 @@ export async function GET(
       // Dados de contingência em caso de falha no BigQuery
       return NextResponse.json({
         currentMonth: {
-          revenue: 143863.08,
-          fixedCost: 97300,
-          variableCost: 8631.78,
-          breakEvenPoint: 106537.74
+          revenue: 0,
+          fixedCost: 0,
+          variableCost: 0,
+          breakEvenPoint: 0
         },
         lastMonth: {
-          revenue: 129476.77,
-          fixedCost: 97300,
-          variableCost: 7768.61,
-          breakEvenPoint: 105649.07
+          revenue: 0,
+          fixedCost: 0,
+          variableCost: 0,
+          breakEvenPoint: 0
         },
         nextMonth: {
-          revenue: 158249.39,
-          fixedCost: 97300,
-          variableCost: 9494.96,
-          breakEvenPoint: 107427.39
+          revenue: 0,
+          fixedCost: 0,
+          variableCost: 0,
+          breakEvenPoint: 0
         },
         is_fallback: true
       });
