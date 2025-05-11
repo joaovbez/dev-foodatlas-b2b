@@ -463,8 +463,8 @@ export async function saveRevenue(
 
 export async function getBreakEvenData(
   restaurantId: string,
-  startDate: string,   // ex: "2024-06-01"
-  endDate: string      // ex: "2024-06-30"
+  startDate: string,
+  endDate: string
 ): Promise<any[]> {
   const projectId  = process.env.GOOGLE_CLOUD_PROJECT_ID!;
   const datasetId  = process.env.BIGQUERY_DATASET!;
@@ -513,16 +513,17 @@ export async function getBreakEvenData(
       monthly_data AS (
         SELECT
           COALESCE(i.month, d.month, s.month) AS month,
-          COALESCE(i.gross_sales,    0) AS gross_sales,
+          COALESCE(i.gross_sales,     0) AS gross_sales,
           COALESCE(d.delivery_revenue,0) AS delivery_revenue,
-          COALESCE(s.stock_cost,     0) AS stock_cost,
-          COALESCE(i.food_cost,      0) AS food_cost,
-          COALESCE(i.labor_cost,     0) AS labor_cost,
-          COALESCE(i.promo_cost,     0) AS promo_cost
+          COALESCE(s.stock_cost,      0) AS stock_cost,
+          COALESCE(i.food_cost,       0) AS food_cost,
+          COALESCE(i.labor_cost,      0) AS labor_cost,
+          COALESCE(i.promo_cost,      0) AS promo_cost
         FROM integrated i
         FULL OUTER JOIN delivery d ON i.month = d.month
         FULL OUTER JOIN stock_usage s ON i.month = s.month
       )
+
     SELECT
       month,
       gross_sales,
@@ -530,17 +531,24 @@ export async function getBreakEvenData(
       (gross_sales + delivery_revenue) AS total_revenue,
       (food_cost + stock_cost)         AS variable_costs,
       (labor_cost + promo_cost)        AS fixed_costs,
-      (labor_cost + promo_cost)
-        / NULLIF((gross_sales + delivery_revenue) - (food_cost + stock_cost), 0)
+
+      /* Margem de contribuição (%) */
+      ((gross_sales + delivery_revenue)
+        - (food_cost + stock_cost)
+      ) / NULLIF((gross_sales + delivery_revenue), 0)
         AS contribution_margin_ratio,
+
+      /* Receita TOTAL necessária para atingir o break-even */
       (labor_cost + promo_cost)
         / NULLIF(
             1
             - ((food_cost + stock_cost)
-               / NULLIF(gross_sales + delivery_revenue, 0)
+               / NULLIF((gross_sales + delivery_revenue), 0)
               ),
             0
-          ) AS break_even_revenue
+          )
+      AS break_even_revenue
+
     FROM monthly_data
     ORDER BY month DESC;
   `;

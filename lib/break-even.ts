@@ -1,20 +1,10 @@
 import { subMonths, startOfMonth, endOfMonth, format } from "date-fns"
 
-// Interface para as transações individuais (mantido para compatibilidade com código existente)
-interface Transaction {
-  restaurant_id: string
-  transaction_type: 'RECEITA' | 'CUSTO'
-  cost_type: 'FIXO' | 'VARIAVEL' | null
-  amount: number
-  description: string
-  date: string
-  created_at: string
-  updated_at: string
-}
-
 // Interface para os dados agregados retornados do BigQuery
 interface BigQueryBreakEvenRow {
-  month: string; // Formato "YYYY-MM-DD" (primeiro dia do mês)
+  month: {
+    value: string;
+  };
   gross_sales: number;
   delivery_revenue: number;
   total_revenue: number;
@@ -48,40 +38,59 @@ interface BreakEvenData {
   }
 }
 
-export function calculateBreakEven(data: any[]): BreakEvenData {
-  // Verificar se os dados são no formato BigQuery ou no formato de transações
-  const isBigQueryFormat = data.length > 0 && 'month' in data[0] && 'total_revenue' in data[0];
-  
-  if (isBigQueryFormat) {
-    return calculateBreakEvenFromBigQuery(data as BigQueryBreakEvenRow[]);
-  } else {
-    return calculateBreakEvenFromTransactions(data as Transaction[]);
-  }
-}
+export function calculateBreakEven(data: BigQueryBreakEvenRow[]): BreakEvenData {
+  console.log('Dados recebidos:', data);
 
-// Nova função para calcular break-even a partir dos dados agregados do BigQuery
-function calculateBreakEvenFromBigQuery(rows: BigQueryBreakEvenRow[]): BreakEvenData {
-  // Ordenar os dados por mês (mais recente primeiro)
-  const sortedRows = [...rows].sort((a, b) => {
-    return new Date(b.month).getTime() - new Date(a.month).getTime();
-  });
+  const now = new Date();
+  const currentMonthStart = startOfMonth(now);
+  const lastMonthStart = startOfMonth(subMonths(now, 1));
 
-  // Obter dados dos últimos meses
-  const currentMonthData = sortedRows[0] || {
+  let currentMonthData = {
     fixed_costs: 0,
     variable_costs: 0,
     total_revenue: 0,
     break_even_revenue: 0
   };
   
-  const lastMonthData = sortedRows[1] || {
+  let lastMonthData = {
     fixed_costs: 0,
     variable_costs: 0,
     total_revenue: 0,
     break_even_revenue: 0
   };
 
-  // Calcular projeção para o próximo mês
+  // Ordena os dados por mês (mais recente primeiro)
+  const sortedRows = [...data].sort((a, b) =>
+    new Date(b.month.value).getTime() - new Date(a.month.value).getTime()
+  )
+
+  console.log('Dados ordenados:', sortedRows)
+  console.log('Datas de referência:', {
+    currentMonthStart: format(currentMonthStart, 'yyyy-MM-dd'),
+    lastMonthStart:    format(lastMonthStart,    'yyyy-MM-dd')
+  })
+
+  // Cria chaves “YYYY-MM” para comparar diretamente
+  const currentKey = format(currentMonthStart, 'yyyy-MM')  // ex: "2025-05"
+  const lastKey    = format(lastMonthStart,    'yyyy-MM')  // ex: "2025-04"
+
+  console.log('Chaves de comparação:', { currentKey, lastKey })
+
+  // Encontra o dado do mês atual e do mês anterior sem problemas de fuso
+  currentMonthData = sortedRows.find(row =>
+    row.month.value.slice(0, 7) === currentKey
+  ) || currentMonthData
+
+  lastMonthData = sortedRows.find(row =>
+    row.month.value.slice(0, 7) === lastKey
+  ) || lastMonthData
+
+  console.log('Dados encontrados:', {
+    currentMonth: currentMonthData,
+    lastMonth:    lastMonthData
+  })
+
+  // Calcular projeção para o próximo mês (modelo experimental, falta implementar o modelo de previsão)
   const revenueRatio = currentMonthData.total_revenue && lastMonthData.total_revenue
     ? currentMonthData.total_revenue / lastMonthData.total_revenue
     : 1.1; // Crescimento padrão de 10% se não houver dados
@@ -92,9 +101,9 @@ function calculateBreakEvenFromBigQuery(rows: BigQueryBreakEvenRow[]): BreakEven
   const projectedTotalCosts = projectedFixedCosts + projectedVariableCosts;
   
   // Calcular break-even point para próximo mês
-  const projectedBreakEvenPoint = projectedFixedCosts / (1 - (projectedVariableCosts / projectedRevenue));
+  const projectedBreakEvenPoint = projectedFixedCosts / (1 - (projectedVariableCosts / projectedRevenue || 0));
 
-  return {
+  const result = {
     currentMonth: {
       fixedCosts: currentMonthData.fixed_costs || 0,
       variableCosts: currentMonthData.variable_costs || 0,
@@ -117,106 +126,7 @@ function calculateBreakEvenFromBigQuery(rows: BigQueryBreakEvenRow[]): BreakEven
       breakEvenPoint: projectedBreakEvenPoint
     }
   };
-}
 
-// Função original renomeada para manter compatibilidade
-function calculateBreakEvenFromTransactions(transactions: Transaction[]): BreakEvenData {
-  const now = new Date()
-  const currentMonthStart = startOfMonth(now)
-  const currentMonthEnd = endOfMonth(now)
-  const lastMonthStart = startOfMonth(subMonths(now, 1))
-  const lastMonthEnd = endOfMonth(subMonths(now, 1))
-
-  // Filtra transações por período
-  const currentMonthTransactions = transactions.filter(
-    (t) => new Date(t.date) >= currentMonthStart && new Date(t.date) <= currentMonthEnd
-  )
-  const lastMonthTransactions = transactions.filter(
-    (t) => new Date(t.date) >= lastMonthStart && new Date(t.date) <= lastMonthEnd
-  )
-
-  // Calcula custos fixos e variáveis
-  const calculateCosts = (transactions: Transaction[]) => {
-    const costs = transactions.filter(t => t.transaction_type === 'CUSTO')
-    const fixedCosts = costs
-      .filter((cost) => cost.cost_type === "FIXO")
-      .reduce((sum, cost) => sum + cost.amount, 0)
-    const variableCosts = costs
-      .filter((cost) => cost.cost_type === "VARIAVEL")
-      .reduce((sum, cost) => sum + cost.amount, 0)
-    return {
-      fixedCosts,
-      variableCosts,
-      totalCosts: fixedCosts + variableCosts,
-    }
-  }
-
-  // Calcula receitas
-  const calculateRevenue = (transactions: Transaction[]) => {
-    return transactions
-      .filter(t => t.transaction_type === 'RECEITA')
-      .reduce((sum, t) => sum + t.amount, 0)
-  }
-
-  // Calcula ponto de break-even
-  const calculateBreakEvenPoint = (fixedCosts: number, variableCosts: number, revenue: number) => {
-    if (revenue === 0) return fixedCosts
-    const variableCostPercentage = variableCosts / revenue
-    return fixedCosts / (1 - variableCostPercentage)
-  }
-
-  // Dados do mês atual
-  const currentMonthCostsData = calculateCosts(currentMonthTransactions)
-  const currentMonthRevenue = calculateRevenue(currentMonthTransactions)
-  const currentMonthBreakEvenPoint = calculateBreakEvenPoint(
-    currentMonthCostsData.fixedCosts,
-    currentMonthCostsData.variableCosts,
-    currentMonthRevenue
-  )
-
-  // Dados do mês anterior
-  const lastMonthCostsData = calculateCosts(lastMonthTransactions)
-  const lastMonthRevenue = calculateRevenue(lastMonthTransactions)
-  const lastMonthBreakEvenPoint = calculateBreakEvenPoint(
-    lastMonthCostsData.fixedCosts,
-    lastMonthCostsData.variableCosts,
-    lastMonthRevenue
-  )
-
-  // Projeção para o próximo mês (usando média de crescimento dos últimos 2 meses)
-  const revenueGrowth = lastMonthRevenue > 0 ? currentMonthRevenue / lastMonthRevenue : 1.1
-  const projectedRevenue = currentMonthRevenue * revenueGrowth
-
-  const projectedFixedCosts = currentMonthCostsData.fixedCosts
-  const projectedVariableCosts = currentMonthCostsData.variableCosts * revenueGrowth
-  const projectedTotalCosts = projectedFixedCosts + projectedVariableCosts
-  const projectedBreakEvenPoint = calculateBreakEvenPoint(
-    projectedFixedCosts,
-    projectedVariableCosts,
-    projectedRevenue
-  )
-
-  return {
-    currentMonth: {
-      fixedCosts: currentMonthCostsData.fixedCosts,
-      variableCosts: currentMonthCostsData.variableCosts,
-      totalCosts: currentMonthCostsData.totalCosts,
-      revenue: currentMonthRevenue,
-      breakEvenPoint: currentMonthBreakEvenPoint,
-    },
-    lastMonth: {
-      fixedCosts: lastMonthCostsData.fixedCosts,
-      variableCosts: lastMonthCostsData.variableCosts,
-      totalCosts: lastMonthCostsData.totalCosts,
-      revenue: lastMonthRevenue,
-      breakEvenPoint: lastMonthBreakEvenPoint,
-    },
-    nextMonth: {
-      fixedCosts: projectedFixedCosts,
-      variableCosts: projectedVariableCosts,
-      totalCosts: projectedTotalCosts,
-      projectedRevenue,
-      breakEvenPoint: projectedBreakEvenPoint,
-    },
-  }
+  console.log('Resultado final:', result);
+  return result;
 } 

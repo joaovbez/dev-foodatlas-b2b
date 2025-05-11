@@ -81,9 +81,6 @@ export async function GET(
         });
       }
       
-      //console.log(`[COUNT_CLIENTS_GET] Encontradas ${transactions.length} transações`);
-      //console.log(`[COUNT_CLIENTS_GET] Exemplo de data da transação:`, transactions[0]?.date);
-      
       // Agrupar transações por mês e contar clientes únicos
       const currentMonthStr = format(currentMonthStart, "yyyy-MM");
       const lastMonthStr = format(lastMonthStart, "yyyy-MM");
@@ -96,8 +93,7 @@ export async function GET(
         try {
           // Verifica se a data está no formato correto antes de processar
           if (!tx.date || typeof tx.date !== 'string') {
-            //console.log(`[COUNT_CLIENTS_GET] Data inválida na transação:`, tx);
-            return; // Pula esta transação
+            return;
           }
 
           // Trata a data como string no formato YYYY-MM-DD
@@ -111,15 +107,14 @@ export async function GET(
             lastMonthClients.add(tx.client_id);
           }
         } catch (err) {
-          //console.error(`[COUNT_CLIENTS_GET] Erro ao processar transação:`, tx, err);
+          
         }
       });
       
       const currentTotal = currentMonthClients.size;
       const lastTotal = lastMonthClients.size || 1; // Evitar divisão por zero
       
-      //console.log(`[COUNT_CLIENTS_GET] Clientes mês atual: ${currentTotal}, mês anterior: ${lastTotal}`);
-      
+
       // Calcular percentual de variação
       const percentage = Math.round(((currentTotal - lastTotal) / lastTotal) * 100);
       
@@ -136,8 +131,8 @@ export async function GET(
       
       // Fornecer dados fictícios em caso de erro durante o desenvolvimento
       return NextResponse.json({
-        total: 24748,
-        percentage: 13,
+        total: 0,
+        percentage: 0,
         period: "month",
         compared_to: "last_month",
         is_fallback: true
