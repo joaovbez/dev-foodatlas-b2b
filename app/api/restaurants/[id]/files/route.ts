@@ -14,6 +14,7 @@ import { processPDFFile } from "@/lib/chat_data/chunkerPDF";
 import { processCSVFile } from "@/lib/chat_data/chunkerCSV";
 import fetch from 'node-fetch'
 import FormData from 'form-data'
+import { exec } from 'child_process';
 
 interface ProcessResult {
   success?: boolean
