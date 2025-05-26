@@ -8,8 +8,13 @@ import path from 'path';
 import os from 'os';
 
 console.log("[DEBUG] Inicializando cliente BigQuery");
-const bigquery = new BigQuery();
-
+const bigquery = new BigQuery({
+  projectId: process.env.GOOGLE_CLOUD_PROJECT_ID,
+  credentials: {
+    client_email: process.env.GOOGLE_CLOUD_CLIENT_EMAIL,
+    private_key: process.env.GBQ_PRIVATE_KEY
+  }
+});
 const datasetId = process.env.BIGQUERY_DATASET;
 if (!datasetId) {
     console.error("[ERROR] BIGQUERY_DATASET não está definido nas variáveis de ambiente");
