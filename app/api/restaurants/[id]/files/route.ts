@@ -12,7 +12,14 @@ import { saveCSVtoSQL, saveEmbedding, saveEmbedding_tabular } from "@/lib/big-qu
 import { processTXTFile } from "@/lib/chat_data/chunkerTXT";
 import { processPDFFile } from "@/lib/chat_data/chunkerPDF";
 import { processCSVFile } from "@/lib/chat_data/chunkerCSV";
-import { exec } from 'child_process';
+import fetch from 'node-fetch'
+import FormData from 'form-data'
+
+interface ProcessResult {
+  success?: boolean
+  records?: number
+  error?: string
+}
 
 interface RestaurantFile {
   id: string;
@@ -220,7 +227,6 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Response> {
-  console.log("[DEBUG] Iniciando processamento de upload de arquivo");
   const { id } = await params;
   console.log(`[DEBUG] Restaurant ID: ${id}`);
   
@@ -290,88 +296,81 @@ export async function POST(
     const tempFilePath = path.join(os.tmpdir(), tempFileName);
     console.log(`[DEBUG] Caminho do arquivo temporário: ${tempFilePath}`);
     let pathGCS = '';
-    
-    try {
-      // Converter o arquivo para um buffer de forma segura
-      console.log("[DEBUG] Convertendo arquivo para buffer");
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      const buffer = Buffer.from(uint8Array);
-
-      // Salvar o arquivo temporário
-      console.log("[DEBUG] Salvando arquivo temporário");
-      await fs.promises.writeFile(tempFilePath, buffer);
-      console.log("[DEBUG] Arquivo temporário salvo com sucesso");
-
-      const sanitizedDocumentType = documentType.trim().toLowerCase().replace(/\s+/g, '-');
-      const fileName = `${restaurant.id}/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${sanitizedDocumentType}/${tempFileName}`;
-      pathGCS = `restaurants/${fileName}`;
-      console.log(`[DEBUG] Caminho GCS: ${pathGCS}`);
       
-      // Upload do arquivo para o Google Cloud Storage
-      console.log("[DEBUG] Iniciando upload para GCS");
-      await bucket.upload(tempFilePath, {
-        destination: pathGCS,
+    // Converter o arquivo para um buffer de forma segura
+    console.log("[DEBUG] Convertendo arquivo para buffer");
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const buffer = Buffer.from(uint8Array);
+
+    // Salvar o arquivo temporário
+    console.log("[DEBUG] Salvando arquivo temporário");
+    await fs.promises.writeFile(tempFilePath, buffer);
+    console.log("[DEBUG] Arquivo temporário salvo com sucesso");
+
+    const sanitizedDocumentType = documentType.trim().toLowerCase().replace(/\s+/g, '-');
+    const fileName = `${restaurant.id}/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${sanitizedDocumentType}/${tempFileName}`;
+    pathGCS = `restaurants/${fileName}`;
+    const blob = bucket.file(pathGCS);
+    console.log(bucket.name);
+
+    return new Promise((resolve, reject) => {
+      const blobStream = blob.createWriteStream({
+        resumable: false,
         metadata: {
           contentType: file.type,
         },
       });
-      console.log("[DEBUG] Upload para GCS concluído");
 
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${pathGCS}`;
-      console.log(`[DEBUG] URL pública: ${publicUrl}`);
-
-      // Criar registro no banco de dados
-      console.log("[DEBUG] Criando registro no banco de dados");
-      const fileRecord = await prisma.restaurantFile.create({
-        data: {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          url: publicUrl,
-          documentType: documentType,              
-          restaurantId: restaurant.id,
-        },
-      });
-      console.log(`[DEBUG] Registro criado com ID: ${fileRecord.id}`);
-
-      // Processar embeddings em background
-      console.log("[DEBUG] Iniciando processamento de embeddings");
-      const ext = path.extname(file.name).toLowerCase();
-      console.log(`[DEBUG] Extensão do arquivo: ${ext}`);
-      
-      Embeddings(pathGCS, ext, tempFilePath, restaurant.id, fileRecord.id, documentType)
-        .catch(error => {
-          console.error("[ERROR] Erro ao processar embeddings:", error);
-        })
-        .finally(() => {
-          try {
-            console.log("[DEBUG] Removendo arquivo temporário");
-            if (fs.existsSync(tempFilePath)) {
-              fs.unlinkSync(tempFilePath);
-              console.log("[DEBUG] Arquivo temporário removido");
-            }
-          } catch (error) {
-            console.error("[ERROR] Erro ao remover arquivo temporário:", error);
-          }
-        });
-
-      return NextResponse.json(fileRecord);
-    } catch (error) {
-      console.error("[ERROR] Erro ao fazer upload do arquivo:", error);
-      try {
-        console.log("[DEBUG] Limpando arquivos parciais");
-        if (fs.existsSync(tempFilePath)) {
-          fs.unlinkSync(tempFilePath);
+      blobStream.on('error', async(err) => {
+        console.error("[ERROR] Erro ao salvar arquivo no GCS:", err);
+        try {
+          await blob.delete();
+          console.log("[DEBUG] Arquivo no GCS deletado devido ao erro");
+        } catch (deleteError) {
+          console.error("[ERROR] Não foi possível deletar arquivo no GCS após erro:", deleteError);
         }
-        await bucket.file(pathGCS).delete().catch(() => {});
-      } catch (deleteError) {
-        console.error("[ERROR] Erro ao limpar arquivo parcial:", deleteError);
-      }
-      return new NextResponse("Erro ao fazer upload do arquivo", { status: 500 });
-    }
+        reject(new Error("[ERROR]Erro ao salvar arquivo no GCS"));
+      })
+      
+      blobStream.on('finish', async() => {
+        try {
+          const publicUrl = `https://storage.googleapis.com/${bucket.name}/${pathGCS}`;
+
+          const fileRecord = await prisma.restaurantFile.create({
+            data: {
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              url: publicUrl,
+              documentType: documentType,              
+              restaurantId: restaurant.id,
+            },
+          });
+          
+          resolve(NextResponse.json(fileRecord));
+
+          const ext = path.extname(file.name).toLowerCase();
+          
+          fs.writeFileSync(tempFilePath, buffer);
+          await Embeddings(pathGCS, ext, tempFilePath, restaurant.id, fileRecord.id, documentType);
+          fs.unlinkSync(tempFilePath);                    
+
+        } catch (error) {
+          console.error("[ERROR] Erro ao salvar arquivo", error);
+          try {
+            await blob.delete();
+          } catch (deleteError) {
+              console.error("[ERROR] Erro ao deletar arquivo no GCS", deleteError);
+          }
+          reject(new Error("[ERROR] Erro ao gerar URL pública"));          
+        }           
+      });
+      
+      blobStream.end(buffer);
+    });            
   } catch (error) {
     console.error("[ERROR] Erro ao processar upload:", error);
     return new NextResponse("Erro interno do servidor", { status: 500 });
   }
-} 
+}
