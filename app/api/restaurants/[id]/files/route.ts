@@ -36,52 +36,44 @@ interface RestaurantFile {
 
 const STORAGE_LIMIT_MB = 100;
 
-// export async function processFileWithPython(
-//   tempFilePath: string,
-//   fileId: string,
-//   restaurantId: string
-// ): Promise<ProcessResult> {
-//   console.log('[DEBUG] Iniciando processamento do arquivo com Python via HTTP')
-//   console.log(`[DEBUG] Caminho do arquivo temporário: ${tempFilePath}`)
-//   console.log(`[DEBUG] File ID: ${fileId}`)
-//   console.log(`[DEBUG] Restaurant ID: ${restaurantId}`)
+async function processFileWithPython(tempFilePath: string, fileId: string, restaurantId: string) {
+  console.log("[DEBUG] Iniciando processamento do arquivo com Python");
+  console.log(`[DEBUG] Caminho do arquivo temporário: ${tempFilePath}`);
+  console.log(`[DEBUG] File ID: ${fileId}`);
+  console.log(`[DEBUG] Restaurant ID: ${restaurantId}`);
 
-//   // 1) Leia o arquivo em memória
-//   const fileBuffer = await fs.promises.readFile(tempFilePath)
-//   const filename = path.basename(tempFilePath)
-
-//   // 2) Monte o form-data
-//   const form = new FormData()
-//   form.append('file', fileBuffer, filename)
-//   form.append('restaurant_id', restaurantId)
-
-//   // 3) Faça a chamada ao FastAPI
-//   const url = `${process.env.PYTHON_SERVICE_URL}/process/`
-//   console.log(`[DEBUG] Enviando POST ${url}`)
-
-//   const res = await fetch(url, {
-//     method: 'POST',
-//     body: form,
-//     headers: form.getHeaders(),
-//   })
-
-//   // 4) Trate erros HTTP
-//   if (!res.ok) {
-//     const text = await res.text()
-//     console.error(`[ERROR] Processor service retornou status ${res.status}: ${text}`)
-//     throw new Error(`Processor service error: ${text}`)
-//   }
-
-//   // 5) Retorne o JSON
-//   const result = await res.json() as ProcessResult
-//   if (result.error) {
-//     console.error(`[ERROR] Processor service reportou erro: ${result.error}`)
-//     throw new Error(result.error)
-//   }
-
-//   console.log(`[DEBUG] Processamento concluído com sucesso, registros: ${result.records}`)
-//   return result
-// }
+  return new Promise((resolve, reject) => {
+    const scriptPath = path.join(process.cwd(), 'lib', 'dataprep', 'processFile.py');
+    console.log(`[DEBUG] Caminho do script Python: ${scriptPath}`);
+    
+    const command = `python3 ${scriptPath} "${tempFilePath}" "${restaurantId}"`;
+    console.log(`[DEBUG] Comando a ser executado: ${command}`);
+    
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`[ERROR] Erro ao executar script Python: ${error.message}`);
+        console.error(`[ERROR] Código de saída: ${error.code}`);
+        console.error(`[ERROR] Signal: ${error.signal}`);
+        reject(new Error(`Erro ao executar script Python: ${error.message}`));
+        return;
+      }
+      
+      if (stderr) {
+        // Verifica se o stderr contém apenas logs de debug/info
+        const isDebugLog = stderr.includes("DEBUG") || stderr.includes("INFO");
+        if (!isDebugLog) {
+          console.error(`[ERROR] Erro no script Python: ${stderr}`);
+          reject(new Error(`Erro no script Python: ${stderr}`));
+          return;
+        }
+      }
+      
+      console.log(`[DEBUG] Script Python executado com sucesso`);
+      console.log(`[DEBUG] Saída do script: ${stdout}`);
+      resolve(stdout);
+    });
+  });
+}
 
 async function Embeddings(pathGSC: string, ext: string, tempFilePath: string, restaurantId: string, fileId: string, documentType: string) {
   console.log("[DEBUG] Iniciando processamento de embeddings");
@@ -95,7 +87,7 @@ async function Embeddings(pathGSC: string, ext: string, tempFilePath: string, re
     // Primeiro processa o arquivo com o script Python
     try {
       console.log("[DEBUG] Iniciando processamento com script Python");
-      // await processFileWithPython(tempFilePath, fileId, restaurantId);
+      await processFileWithPython(tempFilePath, fileId, restaurantId);
       console.log("[DEBUG] Processamento com script Python concluído");
     } catch (error) {
       console.error("[ERROR] Erro ao processar arquivo com script Python:", error);
