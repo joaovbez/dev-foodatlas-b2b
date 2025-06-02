@@ -2,8 +2,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
-import { deleteRestaurantEmbeddings } from "@/lib/big-query"
-import { bucket } from "@/lib/google-cloud-storage"
+import { deleteRestaurantEmbeddings } from "@/lib/big-query/chat/deletes"
 
 export async function GET(
   req: Request,

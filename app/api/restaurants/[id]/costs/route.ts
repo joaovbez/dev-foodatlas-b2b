@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
-import { saveCost, getBreakEvenData } from "@/lib/big-query"
+import { saveCost } from "@/lib/big-query/dashboards/saves"
+import { getBreakEvenData } from "@/lib/big-query/dashboards/getData"
 
 export async function POST(
   req: Request,

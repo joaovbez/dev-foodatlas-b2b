@@ -1,7 +1,7 @@
 import os
 import sys
 import json
-import unicodedata
+import unicodedatapa
 import re
 from datetime import datetime, timezone
 import dotenv

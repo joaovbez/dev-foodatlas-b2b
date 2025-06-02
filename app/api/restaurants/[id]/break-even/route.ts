@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import { calculateBreakEven } from "@/lib/break-even"
-import { getBreakEvenData } from "@/lib/big-query"
+import { getBreakEvenData } from "@/lib/big-query/dashboards/getData"
 import { format, subMonths } from "date-fns";
 
 export async function GET(

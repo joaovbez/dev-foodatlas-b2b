@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
-import { getTransactionsData } from "@/lib/big-query"
+import { getTransactionsData } from "@/lib/big-query/dashboards/getData"
 import { format, subMonths } from "date-fns"
 
 export async function GET(

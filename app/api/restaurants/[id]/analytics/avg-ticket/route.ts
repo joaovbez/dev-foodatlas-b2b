@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
-import { getTransactionsData } from "@/lib/big-query"
+import { getTransactionsData } from "@/lib/big-query/dashboards/getData"
 import { format, subMonths, parseISO } from "date-fns"
 
 export async function GET(
@@ -82,23 +82,26 @@ export async function GET(
       let lastMonthTotal = 0;
       let lastMonthCount = 0;
       
-      // Processar transações
+      // Processar transações      
       transactions.forEach(tx => {
         try {
+          
           // Verifica se a data está no formato correto antes de processar
-          if (!tx.date || typeof tx.date !== 'string') {
-            //console.log(`[AVG_TICKET_GET] Data inválida na transação:`, tx);
+          if (!tx.date.value || typeof tx.date.value !== 'string') {
+            
             return; // Pula esta transação
           }
-
           // Trata a data como string no formato YYYY-MM-DD
-          const txYear = tx.date.substring(0, 4);
-          const txMonth = tx.date.substring(5, 7);
+          const txYear = (tx.date.value).substring(0, 4);
+          const txMonth = (tx.date.value).substring(5, 7);
           const txMonthStr = `${txYear}-${txMonth}`;
           
+          console.log(currentMonthStr);
           if (txMonthStr === currentMonthStr) {
+            console.log("BLABLABLA")
             currentMonthTotal += Number(tx.amount);
             currentMonthCount++;
+            console.log(currentMonthCount)
           } else if (txMonthStr === lastMonthStr) {
             lastMonthTotal += Number(tx.amount);
             lastMonthCount++;
@@ -120,7 +123,7 @@ export async function GET(
       
       // Calcular percentual de variação
       const percentage = Math.round(((currentAvgTicket - lastAvgTicket) / lastAvgTicket) * 100);
-      
+
       return NextResponse.json({
         avg_ticket: currentAvgTicket,
         percentage: percentage,
