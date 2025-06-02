@@ -9,7 +9,6 @@ export async function GET(
   req: NextRequest,
 ) {
   try {
-    console.log("[BREAK_EVEN_GET_DEPRECATED] Redirecionando para novo endpoint");
     
     const session = await getServerSession(authOptions);
     

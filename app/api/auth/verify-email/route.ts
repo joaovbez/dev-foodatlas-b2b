@@ -48,7 +48,6 @@ export async function POST(request: Request) {
         }),
       })
 
-      console.log('Email enviado:', emailResult)
     } catch (emailError) {
       console.error('Erro ao enviar email:', emailError)
       return new NextResponse("Erro ao enviar email de verificação", { status: 500 })

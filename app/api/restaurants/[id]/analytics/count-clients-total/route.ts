@@ -40,7 +40,6 @@ export async function GET(
       if (!tx.date.value || !tx.client_id) return
       map[tx.date.value] = map[tx.date.value] || new Set()
       map[tx.date.value].add(tx.client_id)
-      console.log(tx);
     })
 
     // Montar array com contagens diárias

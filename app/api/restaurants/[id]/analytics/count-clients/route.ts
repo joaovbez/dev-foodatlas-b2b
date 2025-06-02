@@ -11,10 +11,7 @@ export async function GET(
 ) {
   try {
     // Estamos esperando o objeto params antes de acessar suas propriedades
-    const id = (await params).id
-
-    //console.log("[COUNT_CLIENTS_GET] Iniciando busca de contagem de clientes para o restaurante:", id);
-
+    const id = (await params).id;    
     // Validar se o ID foi fornecido
     if (!id) {
       return new NextResponse("ID do restaurante não fornecido", { status: 400 });
@@ -66,13 +63,11 @@ export async function GET(
       const startDateStr = format(lastMonthStart, "yyyy-MM-dd");
       const endDateStr = format(new Date(), "yyyy-MM-dd");
       
-      //console.log(`[COUNT_CLIENTS_GET] Buscando dados entre ${startDateStr} e ${endDateStr}`);
       
       // Usar a nova função para buscar transações
       const transactions = await getTransactionsData(id, startDateStr, endDateStr);
       
       if (!transactions || transactions.length === 0) {
-        //console.log("[COUNT_CLIENTS_GET] Nenhuma transação encontrada, retornando dados vazios");
         return NextResponse.json({
           total: 0,
           percentage: 0,
@@ -124,11 +119,9 @@ export async function GET(
         period: "month",
         compared_to: "last_month"
       };
-
       return NextResponse.json(data);
     } catch (dbError) {
       //console.error("[COUNT_CLIENTS_GET] Erro na consulta:", dbError);
-      
       // Fornecer dados fictícios em caso de erro durante o desenvolvimento
       return NextResponse.json({
         total: 0,
@@ -139,7 +132,7 @@ export async function GET(
       });
     }
   } catch (error) {
-    //console.error("[COUNT_CLIENTS_GET] Erro:", error);
+    console.error("[COUNT_CLIENTS_GET] Erro:", error);
     return new NextResponse("Erro interno do servidor", { status: 500 });
   }
 } 

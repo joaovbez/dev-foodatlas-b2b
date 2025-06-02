@@ -25,7 +25,7 @@ export function AVGCountClient({ restaurantId }: AVGCountClientProps) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch(`/api/restaurants/${restaurantId}/analytics/avg-count-clients`)
+        const res = await fetch(`/api/restaurants/${restaurantId}/analytics/avg-count-clients`)       
         if (!res.ok) throw new Error("Falha ao carregar dados")
         setData(await res.json())
       } catch (error) {
@@ -58,12 +58,14 @@ export function AVGCountClient({ restaurantId }: AVGCountClientProps) {
       </Card>
     )
   }
+  
+  if (!data) 
+    return null
 
-  if (!data) return null
-
-  const positive = data.percentage >= 0
-  const icon = positive ? <TrendingUpIcon /> : <TrendingDownIcon />
-  const badgeVariant = positive ? "default" : "destructive"
+  
+  const positive = data.percentage > 0
+  const icon = data.percentage === 0 ? null : positive ? <TrendingUpIcon className="size-3" /> : <TrendingDownIcon className="size-3" />
+  const badgeVariant = data.percentage === 0 ? "secondary" : positive ? "default" : "destructive"
 
   return (
     <Card className="@container/card">

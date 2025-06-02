@@ -11,7 +11,6 @@ async function handleSubmit(formData: FormData) {
   const unidade = formData.get('unidade')
   const endereco = formData.get('endereco')
   const cnpj = formData.get('cnpj')
-  console.log('Dados do restaurante:', { nome, unidade, endereco, cnpj })
   // Implementar lógica de redirecionamento ou processamento adicional
 }
 

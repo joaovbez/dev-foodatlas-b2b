@@ -54,13 +54,11 @@ export async function GET(
       const startDateStr = format(lastMonthStart, "yyyy-MM-dd");
       const endDateStr = format(today, "yyyy-MM-dd");
       
-     // console.log(`[AVG_TICKET_GET] Buscando transações entre ${startDateStr} e ${endDateStr}`);
       
       // Usar a função getTransactionsData para buscar transações
       const transactions = await getTransactionsData(id, startDateStr, endDateStr);
       
       if (!transactions || transactions.length === 0) {
-        //console.log("[AVG_TICKET_GET] Nenhuma transação encontrada, retornando dados vazios");
         return NextResponse.json({
           avg_ticket: 0,
           percentage: 0,
@@ -70,8 +68,6 @@ export async function GET(
         });
       }
       
-     // console.log(`[AVG_TICKET_GET] Encontradas ${transactions.length} transações`);
-      //console.log(`[AVG_TICKET_GET] Exemplo de data da transação:`, transactions[0]?.date);
       
       // Agrupar transações por mês e calcular médias
       const currentMonthStr = format(currentMonthStart, "yyyy-MM");
@@ -96,12 +92,9 @@ export async function GET(
           const txMonth = (tx.date.value).substring(5, 7);
           const txMonthStr = `${txYear}-${txMonth}`;
           
-          console.log(currentMonthStr);
           if (txMonthStr === currentMonthStr) {
-            console.log("BLABLABLA")
             currentMonthTotal += Number(tx.amount);
             currentMonthCount++;
-            console.log(currentMonthCount)
           } else if (txMonthStr === lastMonthStr) {
             lastMonthTotal += Number(tx.amount);
             lastMonthCount++;
@@ -118,8 +111,6 @@ export async function GET(
       const lastAvgTicket = lastMonthCount > 0 ? 
         parseFloat((lastMonthTotal / lastMonthCount).toFixed(2)) : 1; // Evitar divisão por zero
       
-      //console.log(`[AVG_TICKET_GET] Ticket médio atual: ${currentAvgTicket}, anterior: ${lastAvgTicket}`);
-      //console.log(`[AVG_TICKET_GET] Contagem de transações: atual=${currentMonthCount}, anterior=${lastMonthCount}`);
       
       // Calcular percentual de variação
       const percentage = Math.round(((currentAvgTicket - lastAvgTicket) / lastAvgTicket) * 100);

@@ -39,7 +39,6 @@ interface BreakEvenData {
 }
 
 export function calculateBreakEven(data: BigQueryBreakEvenRow[]): BreakEvenData {
-  console.log('Dados recebidos:', data);
 
   const now = new Date();
   const currentMonthStart = startOfMonth(now);
@@ -64,17 +63,11 @@ export function calculateBreakEven(data: BigQueryBreakEvenRow[]): BreakEvenData 
     new Date(b.month.value).getTime() - new Date(a.month.value).getTime()
   )
 
-  console.log('Dados ordenados:', sortedRows)
-  console.log('Datas de referência:', {
-    currentMonthStart: format(currentMonthStart, 'yyyy-MM-dd'),
-    lastMonthStart:    format(lastMonthStart,    'yyyy-MM-dd')
-  })
 
   // Cria chaves “YYYY-MM” para comparar diretamente
   const currentKey = format(currentMonthStart, 'yyyy-MM')  // ex: "2025-05"
   const lastKey    = format(lastMonthStart,    'yyyy-MM')  // ex: "2025-04"
 
-  console.log('Chaves de comparação:', { currentKey, lastKey })
 
   // Encontra o dado do mês atual e do mês anterior sem problemas de fuso
   currentMonthData = sortedRows.find(row =>
@@ -85,10 +78,7 @@ export function calculateBreakEven(data: BigQueryBreakEvenRow[]): BreakEvenData 
     row.month.value.slice(0, 7) === lastKey
   ) || lastMonthData
 
-  console.log('Dados encontrados:', {
-    currentMonth: currentMonthData,
-    lastMonth:    lastMonthData
-  })
+ 
 
   // Calcular projeção para o próximo mês (modelo experimental, falta implementar o modelo de previsão)
   const revenueRatio = currentMonthData.total_revenue && lastMonthData.total_revenue
@@ -127,6 +117,5 @@ export function calculateBreakEven(data: BigQueryBreakEvenRow[]): BreakEvenData 
     }
   };
 
-  console.log('Resultado final:', result);
   return result;
 } 

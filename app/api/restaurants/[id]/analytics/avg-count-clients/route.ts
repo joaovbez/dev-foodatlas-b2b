@@ -36,6 +36,15 @@ export async function GET(
       // traz todas as transações dos 2 meses
       const transactions = await getTransactionsData(id, startDateStr, endDateStr);
 
+      if (!transactions || transactions.length === 0) {
+        return NextResponse.json({
+          avg_count: 0,
+          percentage: 0,
+          period: "month",
+          compared_to: "last_month",
+        });
+      }
+
       const currentMonthKey = format(currentMonthStart, "yyyy-MM");
       const lastMonthKey = format(lastMonthStart, "yyyy-MM");
 

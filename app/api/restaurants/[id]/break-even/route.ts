@@ -13,7 +13,6 @@ export async function GET(
   try {
     const id = (await params).id
 
-    console.log("[BREAK_EVEN_GET] Iniciando busca dos dados de break-even para restaurante:", id);
     
     const session = await getServerSession(authOptions);
     
@@ -51,15 +50,12 @@ export async function GET(
     const startDate = format(threeMonthsAgo, "yyyy-MM-dd");
     const endDate = format(today, "yyyy-MM-dd");
     
-    console.log(`[BREAK_EVEN_GET] Buscando dados entre ${startDate} e ${endDate} para restaurante ${restaurant.id}`);
 
     try {
       // Buscar dados de transações do BigQuery para o período especificado
       const transactionData = await getBreakEvenData(restaurant.id, startDate, endDate);
-      console.log(`[BREAK_EVEN_GET] Dados recuperados com sucesso: ${transactionData.length} transações`);
       
       if (!transactionData || transactionData.length === 0) {
-        console.log("[BREAK_EVEN_GET] Nenhuma transação encontrada, retornando dados vazios");
         return NextResponse.json({
           currentMonth: {
             revenue: 0,
@@ -85,7 +81,6 @@ export async function GET(
       
       // Calcular o break-even baseado nos dados
       const breakEvenData = calculateBreakEven(transactionData);
-      console.log("[BREAK_EVEN_GET] Cálculo de break-even concluído com sucesso");
       
       return NextResponse.json(breakEvenData);
     } catch (dbError) {

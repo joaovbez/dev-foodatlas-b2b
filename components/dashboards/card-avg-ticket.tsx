@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingUpIcon } from "lucide-react"
+import { TrendingUpIcon, TrendingDownIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,7 +26,6 @@ export function AVGTicket({ restaurantId }: AVGTicketProps) {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Exemplo de chamada à API com o ID do restaurante
         const response = await fetch(`/api/restaurants/${restaurantId}/analytics/avg-ticket`)
         if (!response.ok) throw new Error("Falha ao carregar dados")
         const result = await response.json()
@@ -65,6 +64,13 @@ export function AVGTicket({ restaurantId }: AVGTicketProps) {
     )
   }
 
+  if(!data)
+    return null
+
+  const positive = data.percentage > 0
+  const icon = data.percentage === 0 ? null : positive ? <TrendingUpIcon className="size-3" /> : <TrendingDownIcon className="size-3" />
+  const badgeVariant = data.percentage === 0 ? "secondary" : positive ? "default" : "destructive"
+
   return (
     <Card className="@container/card">
       <CardHeader className="relative">
@@ -73,9 +79,9 @@ export function AVGTicket({ restaurantId }: AVGTicketProps) {
           {data ? `R$ ${data.avg_ticket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : "R$ 0,00"}
         </CardTitle>
         <div className="absolute right-4 top-4">
-          <Badge variant={data && data.percentage > 0 ? "default" : "destructive"} className="flex gap-1 rounded-lg text-xs">
-            <TrendingUpIcon className="size-3" />
-            {data ? `${data.percentage > 0 ? '+' : ''}${data.percentage}%` : "0%"}
+          <Badge variant={badgeVariant} className="flex gap-1 rounded-lg text-xs">
+            {icon}
+            {positive ? `+${data.percentage}%` : `${data.percentage}%`}
           </Badge>
         </div>
       </CardHeader>

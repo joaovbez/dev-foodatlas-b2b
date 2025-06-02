@@ -10,7 +10,6 @@ export async function POST(request: Request) {
       return new NextResponse("Token e senha são obrigatórios", { status: 400 })
     }
 
-    console.log("Verificando token:", token) // Debug
 
     const user = await prisma.user.findFirst({
       where: {
@@ -21,7 +20,6 @@ export async function POST(request: Request) {
       },
     })
 
-    console.log("Usuário encontrado:", user ? "Sim" : "Não") // Debug
 
     if (!user) {
       return new NextResponse("Token inválido ou expirado", { status: 400 })

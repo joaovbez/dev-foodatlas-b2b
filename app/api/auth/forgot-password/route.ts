@@ -38,12 +38,10 @@ export async function POST(request: Request) {
 
     // URL de reset
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000"
-    console.log("Base URL:", baseUrl) // Debug
     
     const resetUrl = new URL("/reset-password", baseUrl)
     resetUrl.searchParams.set("token", resetToken)
     
-    console.log("Reset URL:", resetUrl.toString()) // Debug
 
     // Enviar email
     await resend.emails.send({

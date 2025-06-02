@@ -52,7 +52,6 @@ const prompt_intention = `
  return response;
 }
 export async function AGENT_Insights(query: string, tableInfo: string) {
-    console.log("Agente de Insights em ação");
     const prompt = `
     # Você é um especialista em Business Intelligence e Análise de Dados para os diversos setores de restaurantes.
     
@@ -150,7 +149,6 @@ export async function AGENT_Insights(query: string, tableInfo: string) {
 }
 
 export async function AGENT_Text_to_SQL(query: string, tableInfo: string, tableName: string, insights: string) {
-    console.log("Agente de SQL padrão em ação.");
     const datasetId = process.env.GOOGLE_DATASET_SQL;
     if (!datasetId) {
         throw new Error('GOOGLE_DATASET_SQL não está definido nas variáveis de ambiente');
@@ -237,7 +235,6 @@ export async function AGENT_Text_to_SQL(query: string, tableInfo: string, tableN
 }
 
 export async function AGENT_Text_to_SQL_Charts(query: string, insights: string, tableInfo: string, tableName: string) {
-  console.log("Agente de Gráfico em ação.");
   const datasetId = process.env.GOOGLE_DATASET_SQL;
   if (!datasetId) {
       throw new Error('GOOGLE_DATASET_SQL não está definido nas variáveis de ambiente');
@@ -307,13 +304,11 @@ export async function AGENT_Text_to_SQL_Charts(query: string, insights: string, 
   const sqlCodes = fullText.match(/\[INICIO_CHART_SQL_\d+\]([\s\S]*?)\[FIM_CHART_SQL_\d+\]/g)?.map(match => 
     match.replace(/\[INICIO_CHART_SQL_\d+\]|\[FIM_CHART_SQL_\d+\]/g, '').trim()
   ) || [];
-  console.log(sqlCodes);
   return { sqlCodes, columns };
 }
 
 export async function AGENT_SQL_Validator(sqlQueries: string[], tableInfo: string, tableName: string, columns: string, insights: string) {
     let results = [];
-    console.log("Agente SQL_Validator em ação.");
     for (let sqlQuery of sqlQueries) {
         let attempt = 0; // Counter for attempts
         let rows;
@@ -361,13 +356,11 @@ export async function AGENT_SQL_Validator(sqlQueries: string[], tableInfo: strin
                 `;
 
                 const fixedQuery = await generateResponseCSV(fixPrompt);
-                console.log(errorMessage);
                 sqlQuery = fixedQuery.replace(/```sql|```/g, ''); 
                 attempt++; 
             }
         }
     }
-    console.log(results);
     return results; // Return all results from the executed queries
 }
 

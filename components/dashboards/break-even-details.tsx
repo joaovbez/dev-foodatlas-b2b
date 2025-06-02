@@ -25,13 +25,13 @@ function VariationIndicator({ value, type = "cost" }: { value: number; type?: "c
   }
   
   const isPositive = type === "cost" ? value < 0 : value >= 0;
-  const color = isPositive ? "text-green-500" : "text-red-500";
+  const color = value === 0 ? "text-outline" : isPositive ? "text-green-500" : "text-red-500";
   
-  const Icon = value >= 0 ? ArrowUp : ArrowDown;
+  const Icon = value === 0 ? null : value >= 0 ? ArrowUp : ArrowDown;
 
   return (
     <div className={cn("flex items-center gap-1", color)}>
-      <Icon className="h-4 w-4" />
+      {Icon && <Icon className="h-4 w-4" />}
       <span>{Math.abs(value).toFixed(1)}%</span>
     </div>
   )

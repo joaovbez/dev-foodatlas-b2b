@@ -11,7 +11,6 @@ export async function GET(
   try {
     // Estamos esperando o objeto params antes de acessar suas propriedades
     const id = (await params).id
-    console.log("[RESTAURANT_GET] Iniciando busca do restaurante:", id);
 
     // Validar se o ID foi fornecido
     if (!id) {
@@ -19,7 +18,6 @@ export async function GET(
     }
 
     const session = await getServerSession(authOptions);
-    console.log("[RESTAURANT_GET] Sessão encontrada:", !!session);
 
     if (!session?.user?.email) {
       return new NextResponse("Não autorizado", { status: 401 });
@@ -31,7 +29,6 @@ export async function GET(
         email: session.user.email
       }
     });
-    console.log("[RESTAURANT_GET] Usuário encontrado:", !!user);
 
     if (!user) {
       return new NextResponse("Usuário não encontrado", { status: 404 });
@@ -52,7 +49,6 @@ export async function GET(
         }
       }
     });
-    console.log("[RESTAURANT_GET] Restaurante encontrado:", !!restaurant);
 
     if (!restaurant) {
       return new NextResponse("Restaurante não encontrado", { status: 404 });
@@ -60,7 +56,6 @@ export async function GET(
 
     return NextResponse.json(restaurant);
   } catch (error) {
-    console.error("[RESTAURANT_GET] Erro detalhado:", error);
     return new NextResponse("Erro interno do servidor", { status: 500 });
   }
 }

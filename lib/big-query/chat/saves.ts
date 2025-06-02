@@ -67,7 +67,6 @@ export async function saveEmbedding(
   }
   
   export async function saveCSVtoSQL(pathGCS: string, restaurantId: string, documentType: string) {
-    console.log("[DEBUG] Iniciando saveCSVtoSQL");
   
     // 1) Download do CSV
     const file = bucket.file(pathGCS);
@@ -90,9 +89,7 @@ export async function saveEmbedding(
       ...dataLines.map(l => `${restaurantId},${l}`)
     ].join('\n');
   
-    console.log("[DEBUG] Novo CSV (primeiras 5 linhas):\n" +
-      newCsv.split('\n').slice(0,5).join('\n'));
-  
+    
     // 3) Salva o novo CSV em um arquivo temporário local
     const tempCsvPath = path.join(os.tmpdir(), `csv-upload-${Date.now()}.csv`);
     fs.writeFileSync(tempCsvPath, newCsv);
@@ -111,7 +108,6 @@ export async function saveEmbedding(
       autodetect: true
     };
   
-    console.log(`[DEBUG] Carregando em ${datasetId}.${tableId}...`);
   
     try {
       const [job] = await bigquery
@@ -124,7 +120,6 @@ export async function saveEmbedding(
         throw new Error("Erro no load job");
       }
   
-      console.log("[DEBUG] CSV carregado com sucesso no BigQuery");
     } catch (err) {
       console.error('[ERROR] Falha ao carregar CSV no BigQuery:', err);
       throw err;
