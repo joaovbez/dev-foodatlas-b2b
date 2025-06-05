@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { Card } from "@/components/ui/card"
+import { CostControlTable } from "@/components/dashboards/cost-control-table"
+import { ChartCostControl } from "@/components/dashboards/chart-cost-control"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/hooks/use-toast"
 
@@ -25,13 +26,13 @@ export default function CostControlPage() {
         if (!response.ok) throw new Error("Falha ao carregar dados do restaurante")
         const data = await response.json()
         setRestaurant(data)
-        setLoading(false)
       } catch (error) {
         toast({
           variant: "destructive",
           title: "Erro",
           description: "Não foi possível carregar os dados do restaurante",
         })
+      } finally {
         setLoading(false)
       }
     }
@@ -44,9 +45,10 @@ export default function CostControlPage() {
       <div className="@container/main flex flex-1 flex-col gap-4 px-4 lg:px-6">
         <Skeleton className="h-8 w-64 mb-4" />
         <div className="grid grid-cols-1 gap-4">
-          <Card className="p-6">
-            <Skeleton className="h-[400px] w-full" />
-          </Card>
+          <Skeleton className="h-[400px] w-full" />
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          <Skeleton className="h-[350px] w-full" />
         </div>
       </div>
     )
@@ -60,13 +62,10 @@ export default function CostControlPage() {
         </h2>
       </div>
       <div className="grid grid-cols-1 gap-4">
-        <Card className="p-6 flex items-center justify-center h-[400px]">
-          <p className="text-muted-foreground text-center">
-            Dados de controle de custos serão exibidos aqui.
-            <br />
-            Em desenvolvimento...
-          </p>
-        </Card>
+        <CostControlTable restaurantId={id} />
+      </div>
+      <div className="grid grid-cols-1 gap-4">
+        <ChartCostControl restaurantId={id} />
       </div>
     </div>
   )
