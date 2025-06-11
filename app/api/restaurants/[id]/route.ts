@@ -2,7 +2,12 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
+<<<<<<< HEAD
 import { deleteRestaurantEmbeddings } from "@/lib/big-query/chat/deletes"
+=======
+import { deleteRestaurantEmbeddings } from "@/lib/big-query"
+import { bucket } from "@/lib/google-cloud-storage"
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 
 export async function GET(
   req: Request,
@@ -11,6 +16,10 @@ export async function GET(
   try {
     // Estamos esperando o objeto params antes de acessar suas propriedades
     const id = (await params).id
+<<<<<<< HEAD
+=======
+    console.log("[RESTAURANT_GET] Iniciando busca do restaurante:", id);
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 
     // Validar se o ID foi fornecido
     if (!id) {
@@ -18,6 +27,10 @@ export async function GET(
     }
 
     const session = await getServerSession(authOptions);
+<<<<<<< HEAD
+=======
+    console.log("[RESTAURANT_GET] Sessão encontrada:", !!session);
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 
     if (!session?.user?.email) {
       return new NextResponse("Não autorizado", { status: 401 });
@@ -29,6 +42,7 @@ export async function GET(
         email: session.user.email
       }
     });
+    console.log("[RESTAURANT_GET] Usuário encontrado:", !!user);
 
     if (!user) {
       return new NextResponse("Usuário não encontrado", { status: 404 });
@@ -49,6 +63,7 @@ export async function GET(
         }
       }
     });
+    console.log("[RESTAURANT_GET] Restaurante encontrado:", !!restaurant);
 
     if (!restaurant) {
       return new NextResponse("Restaurante não encontrado", { status: 404 });
@@ -56,6 +71,10 @@ export async function GET(
 
     return NextResponse.json(restaurant);
   } catch (error) {
+<<<<<<< HEAD
+=======
+    console.error("[RESTAURANT_GET] Erro detalhado:", error);
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
     return new NextResponse("Erro interno do servidor", { status: 500 });
   }
 }

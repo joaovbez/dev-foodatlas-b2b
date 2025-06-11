@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import path from "path";
 import os from "os";
 import fs from "fs";
+<<<<<<< HEAD
 import { generateEmbedding } from "@/lib/process_chat_data/openAI";
 import { saveCSVtoSQL, saveEmbedding, saveEmbedding_tabular } from "@/lib/big-query/chat/saves";
 import { processTXTFile } from "@/lib/process_chat_data/chunkerTXT";
@@ -22,6 +23,15 @@ interface ProcessResult {
   error?: string
 }
  
+=======
+import { generateEmbedding } from "@/lib/chat_data/openAI";
+import { saveCSVtoSQL, saveEmbedding, saveEmbedding_tabular } from "@/lib/big-query";
+import { processTXTFile } from "@/lib/chat_data/chunkerTXT";
+import { processPDFFile } from "@/lib/chat_data/chunkerPDF";
+import { processCSVFile } from "@/lib/chat_data/chunkerCSV";
+import { exec } from 'child_process';
+
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 interface RestaurantFile {
   id: string;
   name: string;
@@ -36,10 +46,18 @@ interface RestaurantFile {
 
 const STORAGE_LIMIT_MB = 100;
 
+<<<<<<< HEAD
 
 // Função que chama o child_process pra usar o script python 
 // Em breve vamos mudar para uma API, mais organizado. FastAPI rodando no CloudRun com Docker.
 async function processFileWithPython(tempFilePath: string, fileId: string, restaurantId: string) {  
+=======
+async function processFileWithPython(tempFilePath: string, fileId: string, restaurantId: string) {
+  console.log("[DEBUG] Iniciando processamento do arquivo com Python");
+  console.log(`[DEBUG] Caminho do arquivo temporário: ${tempFilePath}`);
+  console.log(`[DEBUG] File ID: ${fileId}`);
+  console.log(`[DEBUG] Restaurant ID: ${restaurantId}`);
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 
   return new Promise((resolve, reject) => {
     const scriptPath = path.join(process.cwd(), 'lib', 'dataprep', 'processFile.py');
@@ -75,6 +93,7 @@ async function processFileWithPython(tempFilePath: string, fileId: string, resta
 }
 
 async function Embeddings(pathGSC: string, ext: string, tempFilePath: string, restaurantId: string, fileId: string, documentType: string) {
+<<<<<<< HEAD
 
   try {
     try {
@@ -84,14 +103,45 @@ async function Embeddings(pathGSC: string, ext: string, tempFilePath: string, re
     }
     
     if(ext === '.pdf'){
+=======
+  console.log("[DEBUG] Iniciando processamento de embeddings");
+  console.log(`[DEBUG] Caminho GCS: ${pathGSC}`);
+  console.log(`[DEBUG] Extensão: ${ext}`);
+  console.log(`[DEBUG] Caminho temporário: ${tempFilePath}`);
+  console.log(`[DEBUG] Restaurant ID: ${restaurantId}`);
+  console.log(`[DEBUG] File ID: ${fileId}`);
+
+  try {
+    // Primeiro processa o arquivo com o script Python
+    try {
+      console.log("[DEBUG] Iniciando processamento com script Python");
+      await processFileWithPython(tempFilePath, fileId, restaurantId);
+      console.log("[DEBUG] Processamento com script Python concluído");
+    } catch (error) {
+      console.error("[ERROR] Erro ao processar arquivo com script Python:", error);
+      // Não interrompe o fluxo, apenas registra o erro
+    }
+    
+    if(ext === '.pdf'){
+      console.log("[DEBUG] Processando arquivo PDF");
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
       try {
         let chunks_AND_summary = await processPDFFile(tempFilePath);  
         let chunks = chunks_AND_summary?.semanticChunks;
         let summary = chunks_AND_summary?.summary;
         if(chunks) {
+<<<<<<< HEAD
           for (const chunk of chunks) {
             try {
               const embedding = await generateEmbedding(chunk);
+=======
+          console.log(`[DEBUG] Número de chunks do PDF: ${chunks.length}`);
+          for (const chunk of chunks) {
+            try {
+              console.log("[DEBUG] Gerando embedding para chunk do PDF");
+              const embedding = await generateEmbedding(chunk);
+              console.log("[DEBUG] Salvando embedding do PDF");
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
               await saveEmbedding(fileId, restaurantId, chunk, embedding, summary);
             } catch (error) {
               console.error("[ERROR] Erro ao processar chunk do PDF:", error);
@@ -103,25 +153,51 @@ async function Embeddings(pathGSC: string, ext: string, tempFilePath: string, re
         console.error("[ERROR] Erro ao processar PDF:", error);
       }
     } else if (ext === '.csv'){
+<<<<<<< HEAD
       try {
         const file_description = await processCSVFile(tempFilePath);
         if(file_description){
           const embedding = await generateEmbedding(file_description);
           await saveEmbedding_tabular(fileId, restaurantId, file_description, embedding);
+=======
+      console.log("[DEBUG] Processando arquivo CSV");
+      try {
+        console.log("[DEBUG] Obtendo descrição do arquivo CSV");
+        const file_description = await processCSVFile(tempFilePath);
+        if(file_description){
+          console.log("[DEBUG] Gerando embedding para descrição do CSV");
+          const embedding = await generateEmbedding(file_description);
+          console.log("[DEBUG] Salvando embedding tabular");
+          await saveEmbedding_tabular(fileId, restaurantId, file_description, embedding);
+          console.log("[DEBUG] Salvando CSV no SQL");
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
           await saveCSVtoSQL(pathGSC, restaurantId, documentType);  
         }
       } catch (error) {
         console.error("[ERROR] Erro ao processar CSV:", error);
       }
     } else if (ext === '.txt'){
+<<<<<<< HEAD
+=======
+      console.log("[DEBUG] Processando arquivo TXT");
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
       try {
         let chunks_AND_summary = await processTXTFile(tempFilePath);
         let chunks = chunks_AND_summary?.semanticChunks;
         let summary = chunks_AND_summary?.summary;
         if(chunks) {
+<<<<<<< HEAD
           for (const chunk of chunks) {
             try {
               const embedding = await generateEmbedding(chunk);
+=======
+          console.log(`[DEBUG] Número de chunks do TXT: ${chunks.length}`);
+          for (const chunk of chunks) {
+            try {
+              console.log("[DEBUG] Gerando embedding para chunk do TXT");
+              const embedding = await generateEmbedding(chunk);
+              console.log("[DEBUG] Salvando embedding do TXT");
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
               await saveEmbedding(fileId, restaurantId, chunk, embedding, summary);
             } catch (error) {
               console.error("[ERROR] Erro ao processar chunk do TXT:", error);
@@ -177,6 +253,9 @@ export async function GET(
     const totalSize = files.reduce((acc, file) => acc + file.size, 0);
     const usedStorage = files.reduce((acc, file) => acc + (file.size / 1024 / 1024), 0);
 
+    const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+    const usedStorage = files.reduce((acc, file) => acc + (file.size / 1024 / 1024), 0);
+
     const usage = {
       files,
       totalSize,
@@ -199,14 +278,23 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Response> {
+  console.log("[DEBUG] Iniciando processamento de upload de arquivo");
   const { id } = await params;
+<<<<<<< HEAD
+=======
+  console.log(`[DEBUG] Restaurant ID: ${id}`);
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
   
   try {
+    console.log("[DEBUG] Verificando sessão do usuário");
     const session = await getServerSession(authOptions);
     if (!session?.user) {
+      console.log("[ERROR] Usuário não autorizado");
       return new NextResponse("Não autorizado", { status: 401 });
     }
+    console.log(`[DEBUG] Usuário autorizado: ${session.user.email}`);
 
+    console.log("[DEBUG] Verificando restaurante");
     const restaurant = await prisma.restaurant.findFirst({
       where: {
         id,
@@ -215,10 +303,13 @@ export async function POST(
     });
 
     if (!restaurant) {
+      console.log("[ERROR] Restaurante não encontrado");
       return new NextResponse("Restaurante não encontrado", { status: 404 });
     }
+    console.log(`[DEBUG] Restaurante encontrado: ${restaurant.name}`);
 
     // Calcular uso atual do usuário
+    console.log("[DEBUG] Calculando uso atual de armazenamento");
     const userFiles = await prisma.restaurantFile.findMany({
       where: {
         restaurant: {
@@ -228,20 +319,29 @@ export async function POST(
     });
     
     const currentUsageMB = userFiles.reduce((acc: number, file: RestaurantFile) => acc + (file.size / 1024 / 1024), 0);
+<<<<<<< HEAD
+=======
+    console.log(`[DEBUG] Uso atual de armazenamento: ${currentUsageMB}MB`);
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
     
     // Verificar o arquivo novo
+    console.log("[DEBUG] Obtendo dados do formulário");
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const documentType = formData.get("documentType") as string;
 
     if (!file) {
+      console.log("[ERROR] Nenhum arquivo enviado");
       return new NextResponse("Nenhum arquivo enviado", { status: 400 });
     }
+    console.log(`[DEBUG] Arquivo recebido: ${file.name} (${file.size} bytes)`);
 
     const fileSizeMB = file.size / 1024 / 1024;
+    console.log(`[DEBUG] Tamanho do arquivo: ${fileSizeMB}MB`);
     
     // Verificar se o novo arquivo excederá o limite
     if (currentUsageMB + fileSizeMB > STORAGE_LIMIT_MB) {
+      console.log("[ERROR] Limite de armazenamento excedido");
       return new NextResponse(
         `Limite de armazenamento excedido. Você tem ${STORAGE_LIMIT_MB - currentUsageMB}MB disponíveis.`, 
         { status: 400 }
@@ -249,6 +349,7 @@ export async function POST(
     }
 
     // Criar um arquivo temporário com um nome único
+<<<<<<< HEAD
     const tempFileName = `${uuidv4()}-${file.name}`;
     const tempFilePath = path.join(os.tmpdir(), tempFileName);
     let pathGCS = '';
@@ -269,11 +370,42 @@ export async function POST(
     return new Promise((resolve, reject) => {
       const blobStream = blob.createWriteStream({
         resumable: false,
+=======
+    console.log("[DEBUG] Criando arquivo temporário");
+    const tempFileName = `${uuidv4()}-${file.name}`;
+    const tempFilePath = path.join(os.tmpdir(), tempFileName);
+    console.log(`[DEBUG] Caminho do arquivo temporário: ${tempFilePath}`);
+    let pathGCS = '';
+    
+    try {
+      // Converter o arquivo para um buffer de forma segura
+      console.log("[DEBUG] Convertendo arquivo para buffer");
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const buffer = Buffer.from(uint8Array);
+
+      // Salvar o arquivo temporário
+      console.log("[DEBUG] Salvando arquivo temporário");
+      await fs.promises.writeFile(tempFilePath, buffer);
+      console.log("[DEBUG] Arquivo temporário salvo com sucesso");
+
+      const sanitizedDocumentType = documentType.trim().toLowerCase().replace(/\s+/g, '-');
+      const fileName = `${restaurant.id}/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${sanitizedDocumentType}/${tempFileName}`;
+      pathGCS = `restaurants/${fileName}`;
+      console.log(`[DEBUG] Caminho GCS: ${pathGCS}`);
+      
+      // Upload do arquivo para o Google Cloud Storage
+      console.log("[DEBUG] Iniciando upload para GCS");
+      await bucket.upload(tempFilePath, {
+        destination: pathGCS,
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
         metadata: {
           contentType: file.type,
         },
       });
+      console.log("[DEBUG] Upload para GCS concluído");
 
+<<<<<<< HEAD
       blobStream.on('error', async(err) => {
         console.error("[ERROR] Erro ao salvar arquivo no GCS:", err);
         try {
@@ -319,6 +451,60 @@ export async function POST(
       
       blobStream.end(buffer);
     });            
+=======
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${pathGCS}`;
+      console.log(`[DEBUG] URL pública: ${publicUrl}`);
+
+      // Criar registro no banco de dados
+      console.log("[DEBUG] Criando registro no banco de dados");
+      const fileRecord = await prisma.restaurantFile.create({
+        data: {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: publicUrl,
+          documentType: documentType,              
+          restaurantId: restaurant.id,
+        },
+      });
+      console.log(`[DEBUG] Registro criado com ID: ${fileRecord.id}`);
+
+      // Processar embeddings em background
+      console.log("[DEBUG] Iniciando processamento de embeddings");
+      const ext = path.extname(file.name).toLowerCase();
+      console.log(`[DEBUG] Extensão do arquivo: ${ext}`);
+      
+      Embeddings(pathGCS, ext, tempFilePath, restaurant.id, fileRecord.id, documentType)
+        .catch(error => {
+          console.error("[ERROR] Erro ao processar embeddings:", error);
+        })
+        .finally(() => {
+          try {
+            console.log("[DEBUG] Removendo arquivo temporário");
+            if (fs.existsSync(tempFilePath)) {
+              fs.unlinkSync(tempFilePath);
+              console.log("[DEBUG] Arquivo temporário removido");
+            }
+          } catch (error) {
+            console.error("[ERROR] Erro ao remover arquivo temporário:", error);
+          }
+        });
+
+      return NextResponse.json(fileRecord);
+    } catch (error) {
+      console.error("[ERROR] Erro ao fazer upload do arquivo:", error);
+      try {
+        console.log("[DEBUG] Limpando arquivos parciais");
+        if (fs.existsSync(tempFilePath)) {
+          fs.unlinkSync(tempFilePath);
+        }
+        await bucket.file(pathGCS).delete().catch(() => {});
+      } catch (deleteError) {
+        console.error("[ERROR] Erro ao limpar arquivo parcial:", deleteError);
+      }
+      return new NextResponse("Erro ao fazer upload do arquivo", { status: 500 });
+    }
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
   } catch (error) {
     console.error("[ERROR] Erro ao processar upload:", error);
     return new NextResponse("Erro interno do servidor", { status: 500 });

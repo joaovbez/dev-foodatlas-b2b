@@ -2,7 +2,11 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
+<<<<<<< HEAD
 import { getTransactionsData } from "@/lib/big-query/dashboards/getData"
+=======
+import { getTransactionsData } from "@/lib/big-query"
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 import { format, subMonths, parseISO } from "date-fns"
 
 export async function GET(
@@ -54,11 +58,19 @@ export async function GET(
       const startDateStr = format(lastMonthStart, "yyyy-MM-dd");
       const endDateStr = format(today, "yyyy-MM-dd");
       
+<<<<<<< HEAD
+=======
+     // console.log(`[AVG_TICKET_GET] Buscando transações entre ${startDateStr} e ${endDateStr}`);
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
       
       // Usar a função getTransactionsData para buscar transações
       const transactions = await getTransactionsData(id, startDateStr, endDateStr);
       
       if (!transactions || transactions.length === 0) {
+<<<<<<< HEAD
+=======
+        //console.log("[AVG_TICKET_GET] Nenhuma transação encontrada, retornando dados vazios");
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
         return NextResponse.json({
           avg_ticket: 0,
           percentage: 0,
@@ -68,6 +80,11 @@ export async function GET(
         });
       }
       
+<<<<<<< HEAD
+=======
+     // console.log(`[AVG_TICKET_GET] Encontradas ${transactions.length} transações`);
+      //console.log(`[AVG_TICKET_GET] Exemplo de data da transação:`, transactions[0]?.date);
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
       
       // Agrupar transações por mês e calcular médias
       const currentMonthStr = format(currentMonthStart, "yyyy-MM");
@@ -78,6 +95,7 @@ export async function GET(
       let lastMonthTotal = 0;
       let lastMonthCount = 0;
       
+<<<<<<< HEAD
       // Processar transações      
       transactions.forEach(tx => {
         try {
@@ -90,6 +108,20 @@ export async function GET(
           // Trata a data como string no formato YYYY-MM-DD
           const txYear = (tx.date.value).substring(0, 4);
           const txMonth = (tx.date.value).substring(5, 7);
+=======
+      // Processar transações
+      transactions.forEach(tx => {
+        try {
+          // Verifica se a data está no formato correto antes de processar
+          if (!tx.date || typeof tx.date !== 'string') {
+            //console.log(`[AVG_TICKET_GET] Data inválida na transação:`, tx);
+            return; // Pula esta transação
+          }
+
+          // Trata a data como string no formato YYYY-MM-DD
+          const txYear = tx.date.substring(0, 4);
+          const txMonth = tx.date.substring(5, 7);
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
           const txMonthStr = `${txYear}-${txMonth}`;
           
           if (txMonthStr === currentMonthStr) {
@@ -111,10 +143,19 @@ export async function GET(
       const lastAvgTicket = lastMonthCount > 0 ? 
         parseFloat((lastMonthTotal / lastMonthCount).toFixed(2)) : 1; // Evitar divisão por zero
       
+<<<<<<< HEAD
       
       // Calcular percentual de variação
       const percentage = Math.round(((currentAvgTicket - lastAvgTicket) / lastAvgTicket) * 100);
 
+=======
+      //console.log(`[AVG_TICKET_GET] Ticket médio atual: ${currentAvgTicket}, anterior: ${lastAvgTicket}`);
+      //console.log(`[AVG_TICKET_GET] Contagem de transações: atual=${currentMonthCount}, anterior=${lastMonthCount}`);
+      
+      // Calcular percentual de variação
+      const percentage = Math.round(((currentAvgTicket - lastAvgTicket) / lastAvgTicket) * 100);
+      
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
       return NextResponse.json({
         avg_ticket: currentAvgTicket,
         percentage: percentage,

@@ -8,6 +8,12 @@ interface ProcessResult {
   [key: string]: any;
 }
 
+<<<<<<< HEAD
+=======
+/**
+ * Salva o conteúdo do arquivo em um arquivo temporário.
+ */
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 function saveTempFile(fileContent: Buffer | string, originalFilename: string = 'tempfile'): Promise<string> {
   return new Promise((resolve, reject) => {
     const ext = path.extname(originalFilename) || '.tmp';
@@ -22,6 +28,12 @@ function saveTempFile(fileContent: Buffer | string, originalFilename: string = '
   });
 }
 
+<<<<<<< HEAD
+=======
+/**
+ * Invoca o script Python passando o caminho do arquivo temporário.
+ */
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 function runPythonScript(filePath: string): Promise<ProcessResult> {
   return new Promise((resolve, reject) => {
     const scriptPath = path.resolve(__dirname, 'processFile.py'); // Certifique-se de que esse caminho está correto
@@ -59,7 +71,17 @@ function runPythonScript(filePath: string): Promise<ProcessResult> {
   });
 }
 
+<<<<<<< HEAD
 
+=======
+/**
+ * Função que integra o fluxo:
+ * - Recebe o conteúdo do arquivo (como variável)
+ * - Salva temporariamente
+ * - Invoca o Python para processar
+ * - Retorna o resultado (JSON)
+ */
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 export async function processFile(fileContent: Buffer | string, originalFilename: string): Promise<ProcessResult> {
   try {
     const tempFilePath = await saveTempFile(fileContent, originalFilename);

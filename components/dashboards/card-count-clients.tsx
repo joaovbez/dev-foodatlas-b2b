@@ -1,6 +1,10 @@
 "use client"
 
+<<<<<<< HEAD
 import { TrendingUpIcon, TrendingDownIcon} from "lucide-react"
+=======
+import { TrendingUpIcon, TrendingDownIcon } from "lucide-react"
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -63,6 +67,7 @@ export function CountClient({ restaurantId }: CountClientProps) {
     )
   }
 
+<<<<<<< HEAD
   if(!data)
     return null
 
@@ -70,6 +75,8 @@ export function CountClient({ restaurantId }: CountClientProps) {
   const icon = data.percentage === 0 ? null : positive ? <TrendingUpIcon className="size-3" /> : <TrendingDownIcon className="size-3" />
   const badgeVariant = data.percentage === 0 ? "secondary" : positive ? "default" : "destructive"
   
+=======
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
   return (
     <Card className="@container/card">
       <CardHeader className="relative">
@@ -78,9 +85,15 @@ export function CountClient({ restaurantId }: CountClientProps) {
           {data ? data.total.toLocaleString('pt-BR') : "0"}
         </CardTitle>
         <div className="absolute right-4 top-4">
+<<<<<<< HEAD
           <Badge variant={badgeVariant} className="flex gap-1 rounded-lg text-xs">
             {icon}
             {positive ? `+${data.percentage}%` : `${data.percentage}%`}
+=======
+          <Badge variant={data && data.percentage > 0 ? "default" : "destructive"} className="flex gap-1 rounded-lg text-xs">
+            {data && data.percentage > 0 ? <TrendingUpIcon className="size-3" /> : <TrendingDownIcon className="size-3" />}
+            {data ? `${data.percentage > 0 ? '+' : ''}${data.percentage}%` : "0%"}
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
           </Badge>
         </div>
       </CardHeader>

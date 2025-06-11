@@ -3,7 +3,11 @@ import { bucket } from "@/lib/google-cloud-storage"
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth-options"
+<<<<<<< HEAD
 import {deleteFileEmbeddings } from "@/lib/big-query/chat/deletes"
+=======
+import {deleteFileEmbeddings } from "@/lib/big-query"
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 
 export async function DELETE(
   req: NextRequest,

@@ -1,8 +1,14 @@
 // /app/api/restaurants/[id]/chat/route.ts
 import { NextResponse } from "next/server";
+<<<<<<< HEAD
 import { generateEmbedding, generateResponseFinal } from "@/lib/process_chat_data/openAI";
 import { IntentionClassifier } from "@/lib/process_chat_data/agents";
 import { FlowMisto, FlowNumérico, FlowTexto } from "@/lib/process_chat_data/Workflows";
+=======
+import { generateEmbedding, generateResponseFinal } from "@/lib/chat_data/openAI";
+import { IntentionClassifier } from "@/lib/chat_data/agents";
+import { FlowMisto, FlowNumérico, FlowTexto } from "@/lib/chat_data/Workflows";
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
 
 export async function POST(
   req: Request,

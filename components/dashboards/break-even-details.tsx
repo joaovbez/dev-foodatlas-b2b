@@ -25,6 +25,7 @@ function VariationIndicator({ value, type = "cost" }: { value: number; type?: "c
   }
   
   const isPositive = type === "cost" ? value < 0 : value >= 0;
+<<<<<<< HEAD
   const color = value === 0 ? "text-outline" : isPositive ? "text-green-500" : "text-red-500";
   
   const Icon = value === 0 ? null : value >= 0 ? ArrowUp : ArrowDown;
@@ -32,6 +33,15 @@ function VariationIndicator({ value, type = "cost" }: { value: number; type?: "c
   return (
     <div className={cn("flex items-center gap-1", color)}>
       {Icon && <Icon className="h-4 w-4" />}
+=======
+  const color = isPositive ? "text-green-500" : "text-red-500";
+  
+  const Icon = value >= 0 ? ArrowUp : ArrowDown;
+
+  return (
+    <div className={cn("flex items-center gap-1", color)}>
+      <Icon className="h-4 w-4" />
+>>>>>>> c4ab1e42fce547a2b9eff6931444865f90d205e5
       <span>{Math.abs(value).toFixed(1)}%</span>
     </div>
   )
