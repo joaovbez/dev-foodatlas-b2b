@@ -43,63 +43,63 @@ export async function processAndSaveFile(
     }
   }
   
-  export async function saveCost(
-    restaurantId: string,
-    amount: number,
-    type: 'FIXED' | 'VARIABLE',
-    description: string,
-    date: string
-  ): Promise<void> {
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
-    const datasetId = process.env.GOOGLE_DATASET_FINANCE!;
-    const tableId = process.env.GOOGLE_TABLE_COSTS!;
-    const dataset = bigquery.dataset(datasetId, { projectId });
-    const table = dataset.table(tableId);
-  
-    const row = {
-      restaurant_id: restaurantId,
-      amount,
-      type,
-      description,
-      date,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-  
-    try {
-      await table.insert(row);
-    } catch (err) {
-      console.error("Erro ao inserir custo no BigQuery:", err);
-      throw err;
-    }
+export async function saveCost(
+  restaurantId: string,
+  amount: number,
+  type: 'FIXED' | 'VARIABLE',
+  description: string,
+  date: string
+): Promise<void> {
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
+  const datasetId = process.env.GOOGLE_DATASET_FINANCE!;
+  const tableId = process.env.GOOGLE_TABLE_COSTS!;
+  const dataset = bigquery.dataset(datasetId, { projectId });
+  const table = dataset.table(tableId);
+
+  const row = {
+    restaurant_id: restaurantId,
+    amount,
+    type,
+    description,
+    date,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    await table.insert(row);
+  } catch (err) {
+    console.error("Erro ao inserir custo no BigQuery:", err);
+    throw err;
   }
+}
   
-  export async function saveRevenue(
-    restaurantId: string,
-    amount: number,
-    description: string,
-    date: string
-  ): Promise<void> {
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
-    const datasetId = process.env.GOOGLE_CLOUD_DATASET_FINANCE!;
-    const tableId = process.env.GOOGLE_TABLE_REVENUES!;
-    const dataset = bigquery.dataset(datasetId, { projectId });
-    const table = dataset.table(tableId);
-  
-    const row = {
-      restaurant_id: restaurantId,
-      amount,
-      description,
-      date,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-  
-    try {
-      await table.insert(row);
-    } catch (err) {
-      console.error("Erro ao inserir receita no BigQuery:", err);
-      throw err;
-    }
+export async function saveRevenue(
+  restaurantId: string,
+  amount: number,
+  description: string,
+  date: string
+): Promise<void> {
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
+  const datasetId = process.env.GOOGLE_CLOUD_DATASET_FINANCE!;
+  const tableId = process.env.GOOGLE_TABLE_REVENUES!;
+  const dataset = bigquery.dataset(datasetId, { projectId });
+  const table = dataset.table(tableId);
+
+  const row = {
+    restaurant_id: restaurantId,
+    amount,
+    description,
+    date,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    await table.insert(row);
+  } catch (err) {
+    console.error("Erro ao inserir receita no BigQuery:", err);
+    throw err;
   }
+}
   

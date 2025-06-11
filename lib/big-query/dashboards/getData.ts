@@ -107,68 +107,111 @@ export async function getBreakEvenData(
   }
   
   
-  export async function getTransactionsData(
-    restaurantId: string,
-    startDate: string,
-    endDate: string
-  ): Promise<any[]> {
-    
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
-    const dataset = process.env.GOOGLE_DATASET_SQL || "foodatlas_bucket";
-    
-    // Usar as tabelas definidas no .env
-    const stockTable = process.env.BIGQUERY_TABLE_STOCK_CONTROL!;
-    const integTable = process.env.BIGQUERY_TABLE_INTEGRATED_REPORT!;
-    const delivTable = process.env.BIGQUERY_TABLE_DELIVERY_REPORT!;
-    
-    // Consulta adaptada para usar as três tabelas e simular transações
-    const query = `
-      WITH
-        integrated AS (
-          SELECT
-            CONCAT('INT_', CAST(RAND() * 1000000 AS INT64)) AS transaction_id,
-            restaurant_id,
-            CONCAT('CLIENT_', CAST(RAND() * 10000 AS INT64)) AS client_id,
-            data AS date,
-            vendas_brutas_brl AS amount,
-            'RECEITA' AS transaction_type
-          FROM
-            \`${projectId}.${dataset}.${integTable}\`
-          WHERE
-            restaurant_id = @restaurantId
-            AND data BETWEEN DATE(@startDate) AND DATE(@endDate)
-        ),
-        delivery AS (
-          SELECT
-            CONCAT('DEL_', CAST(RAND() * 1000000 AS INT64)) AS transaction_id,
-            restaurant_id,
-            CONCAT('CLIENT_', CAST(RAND() * 10000 AS INT64)) AS client_id,
-            data AS date,
-            total_brl AS amount,
-            'RECEITA' AS transaction_type
-          FROM
-            \`${projectId}.${dataset}.${delivTable}\`
-          WHERE
-            restaurant_id = @restaurantId
-            AND data BETWEEN DATE(@startDate) AND DATE(@endDate)
-        )
-      SELECT * FROM integrated
-      UNION ALL
-      SELECT * FROM delivery
-      ORDER BY date DESC
-    `;
-    
-    const options = {
-      query,
-      params: { restaurantId, startDate, endDate }
-    };
-    
-    try {
-      const [rows] = await bigquery.query(options);
-      return rows as any[];
-    } catch (err) {
-      console.error("[GET_TRANSACTIONS] Erro ao buscar transações:", err);
-      throw err;
-    }
+export async function getTransactionsData(
+  restaurantId: string,
+  startDate: string,
+  endDate: string
+): Promise<any[]> {
+  
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
+  const dataset = process.env.GOOGLE_DATASET_SQL || "foodatlas_bucket";
+  
+  // Usar as tabelas definidas no .env
+  const stockTable = process.env.BIGQUERY_TABLE_STOCK_CONTROL!;
+  const integTable = process.env.BIGQUERY_TABLE_INTEGRATED_REPORT!;
+  const delivTable = process.env.BIGQUERY_TABLE_DELIVERY_REPORT!;
+  
+  // Consulta adaptada para usar as três tabelas e simular transações
+  const query = `
+    WITH
+      integrated AS (
+        SELECT
+          CONCAT('INT_', CAST(RAND() * 1000000 AS INT64)) AS transaction_id,
+          restaurant_id,
+          CONCAT('CLIENT_', CAST(RAND() * 10000 AS INT64)) AS client_id,
+          data AS date,
+          vendas_brutas_brl AS amount,
+          'RECEITA' AS transaction_type
+        FROM
+          \`${projectId}.${dataset}.${integTable}\`
+        WHERE
+          restaurant_id = @restaurantId
+          AND data BETWEEN DATE(@startDate) AND DATE(@endDate)
+      ),
+      delivery AS (
+        SELECT
+          CONCAT('DEL_', CAST(RAND() * 1000000 AS INT64)) AS transaction_id,
+          restaurant_id,
+          CONCAT('CLIENT_', CAST(RAND() * 10000 AS INT64)) AS client_id,
+          data AS date,
+          total_brl AS amount,
+          'RECEITA' AS transaction_type
+        FROM
+          \`${projectId}.${dataset}.${delivTable}\`
+        WHERE
+          restaurant_id = @restaurantId
+          AND data BETWEEN DATE(@startDate) AND DATE(@endDate)
+      )
+    SELECT * FROM integrated
+    UNION ALL
+    SELECT * FROM delivery
+    ORDER BY date DESC
+  `;
+  
+  const options = {
+    query,
+    params: { restaurantId, startDate, endDate }
+  };
+  
+  try {
+    const [rows] = await bigquery.query(options);
+    return rows as any[];
+  } catch (err) {
+    console.error("[GET_TRANSACTIONS] Erro ao buscar transações:", err);
+    throw err;
   }
+}
+
+export async function getTeamData(
+  restaurantId: string,
+  startDate: string,
+  endDate: string
+): Promise<any[]> {  
+
+  
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID!;
+  const dataset = process.env.GOOGLE_DATASET_SQL || "foodatlas_bucket";
+  const team_table = process.env.BIGQUERY_TABLE_TEAM_MANAGEMENT!;
+
+  const query = `
+    SELECT 
+      id_funcionario,
+      ANY_VALUE(funcao) AS funcao,
+      ANY_VALUE(taxa_hora_brl) AS taxa_hora_brl,
+      SUM(horas_trabalhadas * taxa_hora_brl) AS custo_total_brl,
+      SUM(horas_trabalhadas) AS total_horas_trabalhadas,      
+      COUNT(DISTINCT data) AS dias_trabalhados,
+    FROM
+      \`${projectId}.${dataset}.${team_table}\`
+    WHERE
+      restaurant_id = @restaurantId
+      AND data BETWEEN DATE(@startDate) AND DATE(@endDate)
+    GROUP BY
+      id_funcionario
+    ORDER BY
+      total_horas_trabalhadas DESC
+  `;
+  const options = {
+    query,
+    params: { restaurantId, startDate, endDate }
+  };
+  
+  try {
+    const [rows] = await bigquery.query(options);
+    return rows as any[];
+  } catch (err) {
+    console.error("[GET_TEAM] Erro ao buscar equipe:", err);
+    throw err;
+  }
+}
   
